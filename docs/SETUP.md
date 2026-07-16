@@ -14,9 +14,17 @@ en la **fila 1**:
 | Hoja | Columnas (fila 1) |
 |---|---|
 | `Catálogo Servicios` | (la que ya tenés — Redi la lee tal cual) |
-| `Leads` | `fecha`, `nombre`, `contacto`, `canal`, `interes`, `resumen`, `score`, `estado`, `ultimo_seguimiento` |
+| `Base Conocimiento` | `pregunta`, `respuesta`, `categoria` |
+| `Leads` | `fecha`, `nombre`, `contacto`, `canal`, `interes`, `resumen`, `score`, `prioridad`, `estado`, `ultimo_seguimiento`, `variante` |
 | `Agenda` | `fecha_hora`, `nombre`, `contacto`, `tema`, `estado` |
 | `Clientes Activos` | `nombre_empresa`, `contacto`, `servicios`, `modelo`, `precio_impl`, `cuota_mensual`, `fecha_inicio`, `estado`, `encuesta_mes` |
+
+> **`Base Conocimiento`** es lo que pediste: Redi responde las preguntas frecuentes
+> leyendo esta hoja. Cargá ahí las típicas (qué es RedLabs, cómo es el proceso, formas de
+> pago, etc.). No hace falta tocar código: agregás una fila y Redi ya la usa.
+>
+> **`estado`** en `Clientes Activos`: usá **`En curso`** para los proyectos que Luca está
+> haciendo ahora. Redi cuenta esos para estimar el tiempo de entrega.
 
 > Copiá el **ID del Sheet**: está en la URL, entre `/d/` y `/edit`.
 > `https://docs.google.com/spreadsheets/d/`**`ESTE_ES_EL_ID`**`/edit`
@@ -60,42 +68,74 @@ En n8n → **Workflows → Import from File**, importá:
 ## 5. Configurar los crons
 
 - `redi-seguimiento.json`: reemplazá `PEGAR_ID_DEL_SHEET`, la API key de 360dialog y
-  la credencial de Google. Corre todos los días 10:00.
+  la credencial de Google. Corre todos los días 10:00. Hace **A/B testing**: alterna 2
+  versiones del mensaje de reactivación y guarda la `variante` (A/B) para medir cuál cierra más.
 - `redi-reporte-semanal.json`: ídem + `NUMERO_DE_LUCA`. Corre los viernes 18:00 y te
-  manda el reporte por WhatsApp y email.
+  manda el reporte por WhatsApp y email, incluyendo **qué publicación rindió más** (Meta).
+  Para eso, en el nodo `Traer Insights (Meta)` reemplazá `PEGAR_INSTAGRAM_BUSINESS_ID` y
+  `PEGAR_PAGE_ACCESS_TOKEN`. Si no lo configurás, el reporte igual sale (sin la parte de posts).
 
-## 6. Activar y probar
+## 6. Cotización: datos que tenés que setear vos
+
+Estos van en `brain/catalogo.json` → `config_operativa` (y algunos en el Sheet):
+
+- **Seña 50% por transferencia:** en `sena.datos_transferencia` poné tu **alias/CVU o link**
+  de transferencia. Redi lo pasa **solo** al final, si el cliente rechaza la llamada. (No usa
+  Mercado Pago.)
+- **Tiempos de entrega:** en `tiempos_entrega` están los `dias_base` por servicio y la
+  **fórmula**. El modelo actual: con 2 proyectos en simultáneo, cada uno tarda el doble
+  (ej: 5 días solo → 10 con otro en curso); capacidad 2 en paralelo; el que sobra espera en
+  cola; +2 días de holgura. **Revisá esos números conmigo** y ajustalos a tu ritmo real.
+
+## 7. Activar y probar
 
 - Activá los 3 workflows (toggle arriba a la derecha).
-- Mandá un WhatsApp de prueba: *"Hola, ¿tienen un chatbot para WhatsApp?"* → Redi debería
-  responder con el servicio, el precio con desglose, y ofrecer agendar.
+- Mandá un WhatsApp: *"Hola, quiero mejorar mi negocio pero no sé bien qué necesito"* → Redi
+  debería **hacerte preguntas** antes de cotizar, recomendar lo justo, dar precio con desglose
+  **y tiempo de entrega**, ofrecer llamada, y recién si decís que no, pasar la seña.
+- Probá *"uh, no me alcanza, mostrame algo más barato"* → debería recotizar sin insistir.
 - Mandá un audio para verificar la transcripción.
+- Escribí *"lo necesito urgente"* → debería priorizarte y adelantar la llamada.
 - Escribí *"quiero hablar con una persona"* → debería derivarte a vos.
 
 ---
 
-## 🧩 Cómo cotiza Redi (referencia rápida)
+## 🧩 Cómo trabaja Redi ahora (flujo comercial)
 
-- **Servicio del catálogo** → confirma servicio → precio base → suma funciones extra
-  (addons) → desglose → alquiler vs. compra → agenda o guarda lead.
-- **A medida** → releva 4 preguntas → clasifica Simple/Medio/Complejo → cotiza.
-  **Complejo+ (más de 30 funciones) → deriva a Luca.**
+**Presentación → Descubrimiento (preguntas) → Definir lo que necesita de verdad →
+Presupuesto con desglose + tiempo de entrega → Ofrecer llamada con Luca →
+(si dice que no) Seña 50% por transferencia → Cierre.**
+
+- Recomienda **lo mínimo que sirve**, nunca cobra de más.
+- Sabe pilotear el *"no me alcanza"* y **recotizar de cero**.
+- Detecta **urgencia** → marca prioritario, adelanta la llamada y te avisa.
+- **A medida:** Simple/Medio/Complejo se cotizan; **Complejo+ (>30 funciones) → deriva a Luca.**
 - **Siempre** muestra el desglose. **Nunca** dice "nodos" (dice "funciones").
+
+## 💸 Disciplina de costos (ya viene configurada)
+
+- Modelo conversacional **GPT-4o** con `temperature 0.3` y **máx 500 tokens** por respuesta.
+- **Memoria corta** (últimos 12 mensajes) y **tope de 6 iteraciones** del agente (no se cuelga
+  llamando tools de más).
+- El **reporte** usa **gpt-4o-mini** (más barato) porque no necesita el modelo grande.
+- La transcripción (Whisper) y la normalización de mensajes **no gastan tokens de más**.
+- La normalización de cada canal es código puro, sin IA.
 
 ---
 
 ## 🔮 Próximos pasos (roadmap)
 
-**Etapa 2 — Panel web de Redi** (`panel/`): una sola página donde Luca entra y ve
-todo — inbox unificado (WPP/IG/email), leads y cotizaciones, agenda, clientes,
-reporte semanal en vivo, y un botón para "tomar la conversación" (handoff manual).
-Pensado para deployar en Firebase Hosting (tu stack).
+**Etapa 2 — Panel web de Redi** (`panel/`): una sola página donde Luca entra y ve todo —
+inbox unificado (WPP/IG/email), leads y cotizaciones, agenda, clientes, reporte en vivo, y un
+botón para "tomar la conversación" (handoff manual). **Incluye un chat con Redi** donde Luca le
+habla directo y le pregunta qué está pasando / qué está haciendo (en vez de por WhatsApp).
+Pensado para Firebase Hosting.
 
-**Otras ideas para sumarle a Redi:**
-- 🧾 **Presupuestos en PDF** automáticos (S11) enviados por WhatsApp/email.
-- 🌐 **Captación de leads desde tus redes** (comentarios/DMs que piden info → lead automático).
-- 🔔 **Alertas para Luca** cuando entra un lead caliente o un cliente VIP escribe.
-- 🗣️ **Redi con voz:** que responda audios con audios (TTS), no solo texto.
-- 📈 **Métricas de publicaciones:** conectar Meta Insights para saber qué post trajo más contactos.
-- 🧠 **Base de conocimiento (RAG):** que Redi responda FAQ desde tus propios documentos.
-- 💳 **Link de pago** al cerrar (Mercado Pago) para cobrar la implementación al toque.
+**Ya incorporado en esta versión:** descubrimiento con preguntas, recomendación del mínimo
+necesario, tiempo de entrega, seña 50% por transferencia, urgencia/prioridad, base de
+conocimiento en el Sheet, A/B testing en seguimiento y métricas de Meta en el reporte.
+
+**Ideas que quedan para más adelante:**
+- 🧾 **Presupuesto en PDF** con tu marca, enviado por WhatsApp/email al cerrar.
+- 🗣️ **Redi con voz:** que responda audios con audios (TTS).
+- 🌐 **Captación automática desde redes:** comentarios/DMs que piden info → lead solo.

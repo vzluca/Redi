@@ -54,7 +54,25 @@
     },
     {
       "parameters": {
-        "jsCode": "// Calcula métricas de la última semana\nconst leads = $('Leer Leads').all().map(i => i.json);\nconst agenda = $('Leer Agenda').all().map(i => i.json);\nconst hoy = new Date();\nconst hace7 = new Date(hoy.getTime() - 7*24*60*60*1000);\nconst dentroSemana = (f) => { const d = new Date(f); return d >= hace7 && d <= hoy; };\n\nconst leadsSemana = leads.filter(l => dentroSemana(l.fecha));\nconst porCanal = {};\nleadsSemana.forEach(l => { const c = l.canal || 'otro'; porCanal[c] = (porCanal[c]||0)+1; });\nconst cerrados = leadsSemana.filter(l => (l.estado||'').toLowerCase() === 'cerrado').length;\nconst llamadas = agenda.filter(a => dentroSemana(a.fecha_hora || a.fecha)).length;\nconst total = leadsSemana.length;\nconst conv = total ? Math.round((cerrados/total)*100) : 0;\n\nreturn [{ json: {\n  total_contactos: total,\n  por_canal: porCanal,\n  leads_cerrados: cerrados,\n  conversion_pct: conv,\n  llamadas_agendadas: llamadas,\n  detalle: leadsSemana.map(l => ({ canal: l.canal, interes: l.interes, estado: l.estado }))\n}}];"
+        "method": "GET",
+        "url": "=https://graph.facebook.com/v19.0/PEGAR_INSTAGRAM_BUSINESS_ID/media",
+        "sendQuery": true,
+        "queryParameters": { "parameters": [
+          { "name": "fields", "value": "caption,permalink,timestamp,like_count,comments_count,insights.metric(reach,total_interactions)" },
+          { "name": "access_token", "value": "PEGAR_PAGE_ACCESS_TOKEN" }
+        ] },
+        "options": {}
+      },
+      "id": "meta",
+      "name": "Traer Insights (Meta)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-220, 320],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calcula métricas de la última semana (Sheets) + mejores publicaciones (Meta)\nconst leads = $('Leer Leads').all().map(i => i.json);\nconst agenda = $('Leer Agenda').all().map(i => i.json);\nconst hoy = new Date();\nconst hace7 = new Date(hoy.getTime() - 7*24*60*60*1000);\nconst dentroSemana = (f) => { const d = new Date(f); return d >= hace7 && d <= hoy; };\n\nconst leadsSemana = leads.filter(l => dentroSemana(l.fecha));\nconst porCanal = {};\nleadsSemana.forEach(l => { const c = l.canal || 'otro'; porCanal[c] = (porCanal[c]||0)+1; });\nconst cerrados = leadsSemana.filter(l => (l.estado||'').toLowerCase() === 'cerrado').length;\nconst llamadas = agenda.filter(a => dentroSemana(a.fecha_hora || a.fecha)).length;\nconst total = leadsSemana.length;\nconst conv = total ? Math.round((cerrados/total)*100) : 0;\n\n// Mejores publicaciones de la semana según Meta (si está configurado)\nlet topPosts = [];\ntry {\n  const media = $('Traer Insights (Meta)').first().json?.data || [];\n  topPosts = media\n    .filter(m => dentroSemana(m.timestamp))\n    .map(m => {\n      const ins = (m.insights?.data || []).reduce((a,x)=>{a[x.name]=x.values?.[0]?.value; return a;}, {});\n      return { caption: (m.caption||'').slice(0,60), link: m.permalink, likes: m.like_count||0, comentarios: m.comments_count||0, alcance: ins.reach||0, interacciones: ins.total_interactions||0 };\n    })\n    .sort((a,b) => (b.interacciones||0) - (a.interacciones||0))\n    .slice(0, 3);\n} catch (e) { topPosts = []; }\n\nreturn [{ json: {\n  total_contactos: total,\n  por_canal: porCanal,\n  leads_cerrados: cerrados,\n  conversion_pct: conv,\n  llamadas_agendadas: llamadas,\n  mejores_publicaciones: topPosts,\n  detalle: leadsSemana.map(l => ({ canal: l.canal, interes: l.interes, estado: l.estado }))\n}}];"
       },
       "id": "metrics",
       "name": "Calcular métricas",
@@ -64,14 +82,14 @@
     },
     {
       "parameters": {
-        "modelId": { "__rl": true, "mode": "list", "value": "gpt-4o" },
+        "modelId": { "__rl": true, "mode": "list", "value": "gpt-4o-mini" },
         "messages": {
           "values": [
-            { "role": "system", "content": "Sos Redi, analista de RedLabs. Con las métricas de la semana, escribí un reporte breve y accionable para Luca (dueño). Tono cercano, en español rioplatense. Incluí: un resumen de cuánta gente contactó y por qué canal, la conversión, y 3 consejos concretos para mejorar la próxima semana (qué canal potenciar, qué tipo de publicación/consulta rindió más). Nada de tecnicismos. Máx 200 palabras." },
+            { "role": "system", "content": "Sos Redi, analista de RedLabs. Con las métricas de la semana, escribí un reporte breve y accionable para Luca (dueño). Tono cercano, en español rioplatense. Incluí: un resumen de cuánta gente contactó y por qué canal, la conversión, qué publicación rindió más (de 'mejores_publicaciones') y 3 consejos concretos para la próxima semana (qué canal potenciar, qué contenido repetir). Nada de tecnicismos. Máx 180 palabras." },
             { "role": "user", "content": "=Métricas de la semana:\\n{{ JSON.stringify($json, null, 2) }}" }
           ]
         },
-        "options": { "temperature": 0.5 }
+        "options": { "temperature": 0.4, "maxTokens": 400 }
       },
       "id": "ai-report",
       "name": "Redactar reporte (IA)",
@@ -121,9 +139,10 @@
     }
   ],
   "connections": {
-    "Viernes 18:00": { "main": [ [ { "node": "Leer Leads", "type": "main", "index": 0 }, { "node": "Leer Agenda", "type": "main", "index": 0 } ] ] },
+    "Viernes 18:00": { "main": [ [ { "node": "Leer Leads", "type": "main", "index": 0 }, { "node": "Leer Agenda", "type": "main", "index": 0 }, { "node": "Traer Insights (Meta)", "type": "main", "index": 0 } ] ] },
     "Leer Leads": { "main": [ [ { "node": "Calcular métricas", "type": "main", "index": 0 } ] ] },
     "Leer Agenda": { "main": [ [ { "node": "Calcular métricas", "type": "main", "index": 0 } ] ] },
+    "Traer Insights (Meta)": { "main": [ [ { "node": "Calcular métricas", "type": "main", "index": 0 } ] ] },
     "Calcular métricas": { "main": [ [ { "node": "Redactar reporte (IA)", "type": "main", "index": 0 } ] ] },
     "Redactar reporte (IA)": { "main": [ [ { "node": "Formatear reporte", "type": "main", "index": 0 } ] ] },
     "Formatear reporte": { "main": [ [ { "node": "Enviar a Luca (WhatsApp)", "type": "main", "index": 0 }, { "node": "Enviar a Luca (Email)", "type": "main", "index": 0 } ] ] }
