@@ -1,0 +1,135 @@
+{
+  "name": "Redi — Reporte Semanal para Luca",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📊 REPORTE SEMANAL\nCada viernes 18:00 arma el reporte de la semana y te lo manda por WhatsApp (y email):\n- Cuántas personas contactaron y por qué canal.\n- Leads nuevos, cerrados y % de conversión.\n- Llamadas agendadas.\n- Consejos de mejora y qué canal/publicación rindió más (IA).\nLee de las hojas Leads / Agenda / Clientes Activos.",
+        "height": 240,
+        "width": 400,
+        "color": 3
+      },
+      "id": "note",
+      "name": "Nota",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-480, -280]
+    },
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "cronExpression", "expression": "0 18 * * 5" } ] }
+      },
+      "id": "cron",
+      "name": "Viernes 18:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-460, 0]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Leads" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "leads",
+      "name": "Leer Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-220, -40]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Agenda" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "agenda",
+      "name": "Leer Agenda",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-220, 140]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calcula métricas de la última semana\nconst leads = $('Leer Leads').all().map(i => i.json);\nconst agenda = $('Leer Agenda').all().map(i => i.json);\nconst hoy = new Date();\nconst hace7 = new Date(hoy.getTime() - 7*24*60*60*1000);\nconst dentroSemana = (f) => { const d = new Date(f); return d >= hace7 && d <= hoy; };\n\nconst leadsSemana = leads.filter(l => dentroSemana(l.fecha));\nconst porCanal = {};\nleadsSemana.forEach(l => { const c = l.canal || 'otro'; porCanal[c] = (porCanal[c]||0)+1; });\nconst cerrados = leadsSemana.filter(l => (l.estado||'').toLowerCase() === 'cerrado').length;\nconst llamadas = agenda.filter(a => dentroSemana(a.fecha_hora || a.fecha)).length;\nconst total = leadsSemana.length;\nconst conv = total ? Math.round((cerrados/total)*100) : 0;\n\nreturn [{ json: {\n  total_contactos: total,\n  por_canal: porCanal,\n  leads_cerrados: cerrados,\n  conversion_pct: conv,\n  llamadas_agendadas: llamadas,\n  detalle: leadsSemana.map(l => ({ canal: l.canal, interes: l.interes, estado: l.estado }))\n}}];"
+      },
+      "id": "metrics",
+      "name": "Calcular métricas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [40, 40]
+    },
+    {
+      "parameters": {
+        "modelId": { "__rl": true, "mode": "list", "value": "gpt-4o" },
+        "messages": {
+          "values": [
+            { "role": "system", "content": "Sos Redi, analista de RedLabs. Con las métricas de la semana, escribí un reporte breve y accionable para Luca (dueño). Tono cercano, en español rioplatense. Incluí: un resumen de cuánta gente contactó y por qué canal, la conversión, y 3 consejos concretos para mejorar la próxima semana (qué canal potenciar, qué tipo de publicación/consulta rindió más). Nada de tecnicismos. Máx 200 palabras." },
+            { "role": "user", "content": "=Métricas de la semana:\\n{{ JSON.stringify($json, null, 2) }}" }
+          ]
+        },
+        "options": { "temperature": 0.5 }
+      },
+      "id": "ai-report",
+      "name": "Redactar reporte (IA)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [320, 40]
+    },
+    {
+      "parameters": {
+        "jsCode": "const m = $('Calcular métricas').item.json;\nconst texto = $json.message?.content || $json.text || '';\nconst canales = Object.entries(m.por_canal).map(([k,v]) => `  • ${k}: ${v}`).join('\\n') || '  • (sin contactos)';\nconst body = `📊 *Reporte semanal RedLabs*\\n\\n👥 Contactaron: ${m.total_contactos}\\n${canales}\\n✅ Cerrados: ${m.leads_cerrados} (conversión ${m.conversion_pct}%)\\n📞 Llamadas agendadas: ${m.llamadas_agendadas}\\n\\n${texto}`;\nreturn [{ json: { body } }];"
+      },
+      "id": "format",
+      "name": "Formatear reporte",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 40]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://waba-v2.360dialog.io/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "D360-API-KEY", "value": "PEGAR_API_KEY_360" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"NUMERO_DE_LUCA\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.body }}\" }\n}",
+        "options": {}
+      },
+      "id": "send-wpp",
+      "name": "Enviar a Luca (WhatsApp)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, -60]
+    },
+    {
+      "parameters": {
+        "sendTo": "vasquezgluca@gmail.com",
+        "subject": "📊 Reporte semanal RedLabs",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "send-mail",
+      "name": "Enviar a Luca (Email)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [860, 140]
+    }
+  ],
+  "connections": {
+    "Viernes 18:00": { "main": [ [ { "node": "Leer Leads", "type": "main", "index": 0 }, { "node": "Leer Agenda", "type": "main", "index": 0 } ] ] },
+    "Leer Leads": { "main": [ [ { "node": "Calcular métricas", "type": "main", "index": 0 } ] ] },
+    "Leer Agenda": { "main": [ [ { "node": "Calcular métricas", "type": "main", "index": 0 } ] ] },
+    "Calcular métricas": { "main": [ [ { "node": "Redactar reporte (IA)", "type": "main", "index": 0 } ] ] },
+    "Redactar reporte (IA)": { "main": [ [ { "node": "Formatear reporte", "type": "main", "index": 0 } ] ] },
+    "Formatear reporte": { "main": [ [ { "node": "Enviar a Luca (WhatsApp)", "type": "main", "index": 0 }, { "node": "Enviar a Luca (Email)", "type": "main", "index": 0 } ] ] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [ { "name": "Redi" } ]
+}

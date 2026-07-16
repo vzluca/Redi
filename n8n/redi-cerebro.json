@@ -1,0 +1,363 @@
+{
+  "name": "Redi — Cerebro (Multicanal + Cotización)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🧠 REDI — CEREBRO\nAsistente de RedLabs. Atiende WhatsApp, Instagram y Email.\nTranscribe audios (Whisper), cotiza desde el Sheet, agenda llamadas,\nguarda leads y deriva a Luca cuando hace falta.\n\n**Antes de activar:** cargá credenciales en cada nodo y pegá el System\nPrompt de `brain/redi-system-prompt.md` en el nodo 'Redi (AI Agent)'.",
+        "height": 260,
+        "width": 420,
+        "color": 4
+      },
+      "id": "note-header",
+      "name": "Nota — Cómo usar",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-460, -320]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "redi-whatsapp",
+        "options": {}
+      },
+      "id": "wh-wpp",
+      "name": "WhatsApp In (360dialog)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-440, -40],
+      "webhookId": "redi-whatsapp"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "redi-instagram",
+        "options": {}
+      },
+      "id": "wh-ig",
+      "name": "Instagram In (Meta)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-440, 160],
+      "webhookId": "redi-instagram"
+    },
+    {
+      "parameters": {
+        "pollTimes": { "item": [ { "mode": "everyMinute" } ] },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "id": "tr-gmail",
+      "name": "Email In (Gmail)",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [-440, 360]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza el payload de 360dialog a un formato común para Redi\nconst body = $json.body || $json;\nconst msg = body?.messages?.[0] || {};\nconst contact = body?.contacts?.[0] || {};\nlet type = 'text';\nlet text = msg?.text?.body || '';\nlet mediaId = '';\nif (msg.type === 'audio' || msg.voice) { type = 'audio'; mediaId = msg?.audio?.id || msg?.voice?.id || ''; }\nelse if (msg.type === 'image') { type = 'image'; mediaId = msg?.image?.id || ''; text = msg?.image?.caption || ''; }\nreturn [{ json: {\n  channel: 'whatsapp',\n  from: msg.from || contact?.wa_id || '',\n  name: contact?.profile?.name || 'Cliente',\n  type,\n  text,\n  mediaId,\n  sessionId: 'wpp_' + (msg.from || contact?.wa_id || 'anon')\n}}];"
+      },
+      "id": "norm-wpp",
+      "name": "Normalizar WhatsApp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, -40]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza el payload de Instagram Messaging (Meta) a formato común\nconst entry = ($json.body?.entry || $json.entry || [])[0] || {};\nconst messaging = (entry.messaging || [])[0] || {};\nconst senderId = messaging?.sender?.id || '';\nconst text = messaging?.message?.text || '';\nconst att = messaging?.message?.attachments?.[0];\nlet type = 'text'; let mediaUrl = '';\nif (att?.type === 'audio') { type = 'audio'; mediaUrl = att?.payload?.url || ''; }\nelse if (att?.type === 'image') { type = 'image'; mediaUrl = att?.payload?.url || ''; }\nreturn [{ json: {\n  channel: 'instagram',\n  from: senderId,\n  name: 'Seguidor IG',\n  type,\n  text,\n  mediaUrl,\n  sessionId: 'ig_' + senderId\n}}];"
+      },
+      "id": "norm-ig",
+      "name": "Normalizar Instagram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza un email de Gmail a formato común\nconst from = $json.from?.value?.[0]?.address || $json.from || '';\nconst name = $json.from?.value?.[0]?.name || 'Contacto';\nconst text = ($json.subject ? 'Asunto: ' + $json.subject + '\\n\\n' : '') + ($json.textPlain || $json.snippet || '');\nreturn [{ json: {\n  channel: 'email',\n  from,\n  name,\n  type: 'text',\n  text,\n  threadId: $json.threadId || '',\n  sessionId: 'mail_' + from\n}}];"
+      },
+      "id": "norm-mail",
+      "name": "Normalizar Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, 360]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            { "id": "c1", "leftValue": "={{ $json.type }}", "rightValue": "audio", "operator": { "type": "string", "operation": "equals" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-audio",
+      "name": "¿Es audio?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [120, 120]
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": { "language": "es" }
+      },
+      "id": "whisper",
+      "name": "Transcribir Audio (Whisper)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [360, 0],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "merge-in",
+      "name": "Unificar entrada",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [600, 120]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "PEGAR ACÁ el contenido de brain/redi-system-prompt.md. Redi es el asistente de RedLabs: cotiza desde el Sheet, agenda llamadas con Luca, guarda leads y deriva a humano cuando corresponde. Nunca usa términos técnicos (nada de 'nodos'/'API'), siempre muestra el desglose de precios y lee los precios en tiempo real con la tool Consultar_Catalogo."
+        }
+      },
+      "id": "agent",
+      "name": "Redi (AI Agent)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [860, 120]
+    },
+    {
+      "parameters": {
+        "model": { "__rl": true, "mode": "list", "value": "gpt-4o" },
+        "options": { "temperature": 0.4 }
+      },
+      "id": "llm",
+      "name": "GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [720, 360]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "id": "memory",
+      "name": "Memoria por contacto",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [860, 360]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Lee servicios, addons, combos, servicios web y niveles personalizados con sus precios. USAR SIEMPRE antes de dar un precio. Pasá el nombre o palabra clave del servicio en el filtro.",
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Catálogo Servicios" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "tool-catalogo",
+      "name": "Consultar_Catalogo",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [1000, 360]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Guarda un lead nuevo en la hoja 'Leads'. Campos: fecha, nombre, contacto, canal, interes, resumen, score.",
+        "operation": "append",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Leads" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "fecha": "={{ $now.toISO() }}",
+            "nombre": "={{ $fromAI('nombre') }}",
+            "contacto": "={{ $fromAI('contacto') }}",
+            "canal": "={{ $fromAI('canal') }}",
+            "interes": "={{ $fromAI('interes') }}",
+            "resumen": "={{ $fromAI('resumen') }}",
+            "score": "={{ $fromAI('score') }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "tool-lead",
+      "name": "Guardar_Lead",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [1140, 360]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Agenda una llamada con Luca en Google Calendar. Requiere nombre, contacto, fecha_hora (ISO) y tema.",
+        "operation": "create",
+        "calendar": { "__rl": true, "mode": "list", "value": "primary" },
+        "start": "={{ $fromAI('fecha_hora') }}",
+        "end": "={{ $fromAI('fecha_hora') }}",
+        "additionalFields": {
+          "summary": "=Llamada RedLabs — {{ $fromAI('nombre') }}",
+          "description": "=Tema: {{ $fromAI('tema') }}\\nContacto: {{ $fromAI('contacto') }}\\nAgendado por Redi."
+        }
+      },
+      "id": "tool-cal",
+      "name": "Agendar_Llamada",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [1280, 360]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Registra un cliente cerrado en la hoja 'Clientes Activos'. Usar cuando se confirma una venta.",
+        "operation": "append",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Clientes Activos" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nombre_empresa": "={{ $fromAI('nombre') }}",
+            "contacto": "={{ $fromAI('contacto') }}",
+            "servicios": "={{ $fromAI('servicios') }}",
+            "modelo": "={{ $fromAI('modelo') }}",
+            "precio_impl": "={{ $fromAI('precio_impl') }}",
+            "cuota_mensual": "={{ $fromAI('cuota_mensual') }}",
+            "fecha_inicio": "={{ $now.toISODate() }}",
+            "estado": "Nuevo"
+          }
+        },
+        "options": {}
+      },
+      "id": "tool-cliente",
+      "name": "Registrar_Cliente",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [1420, 360]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Deriva la conversación a Luca (humano). Usar cuando el cliente pide hablar con una persona, se frustra, o el proyecto es Complejo+. Enviar motivo y resumen.",
+        "method": "POST",
+        "url": "https://waba-v2.360dialog.io/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "D360-API-KEY", "value": "PEGAR_API_KEY_360_DE_LUCA" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"NUMERO_DE_LUCA\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"🔔 Redi te deriva un caso.\\nMotivo: {{ $fromAI('motivo') }}\\nResumen: {{ $fromAI('resumen') }}\" }\n}",
+        "options": {}
+      },
+      "id": "tool-humano",
+      "name": "Derivar_a_Humano",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [1560, 360]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Unificar entrada').item.json.channel }}", "rightValue": "whatsapp", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "whatsapp" },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Unificar entrada').item.json.channel }}", "rightValue": "instagram", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "instagram" },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Unificar entrada').item.json.channel }}", "rightValue": "email", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "email" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "switch-out",
+      "name": "¿Por qué canal respondo?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1180, 120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://waba-v2.360dialog.io/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "D360-API-KEY", "value": "PEGAR_API_KEY_360" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('Unificar entrada').item.json.from }}\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.output }}\" }\n}",
+        "options": {}
+      },
+      "id": "send-wpp",
+      "name": "Responder WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1460, -40]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/me/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Authorization", "value": "Bearer PEGAR_PAGE_ACCESS_TOKEN" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"recipient\": { \"id\": \"{{ $('Unificar entrada').item.json.from }}\" },\n  \"message\": { \"text\": \"{{ $json.output }}\" }\n}",
+        "options": {}
+      },
+      "id": "send-ig",
+      "name": "Responder Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1460, 120]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "reply",
+        "messageId": "={{ $('Unificar entrada').item.json.threadId }}",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "send-mail",
+      "name": "Responder Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1460, 280]
+    }
+  ],
+  "connections": {
+    "WhatsApp In (360dialog)": { "main": [ [ { "node": "Normalizar WhatsApp", "type": "main", "index": 0 } ] ] },
+    "Instagram In (Meta)": { "main": [ [ { "node": "Normalizar Instagram", "type": "main", "index": 0 } ] ] },
+    "Email In (Gmail)": { "main": [ [ { "node": "Normalizar Email", "type": "main", "index": 0 } ] ] },
+    "Normalizar WhatsApp": { "main": [ [ { "node": "¿Es audio?", "type": "main", "index": 0 } ] ] },
+    "Normalizar Instagram": { "main": [ [ { "node": "¿Es audio?", "type": "main", "index": 0 } ] ] },
+    "Normalizar Email": { "main": [ [ { "node": "¿Es audio?", "type": "main", "index": 0 } ] ] },
+    "¿Es audio?": { "main": [ [ { "node": "Transcribir Audio (Whisper)", "type": "main", "index": 0 } ], [ { "node": "Unificar entrada", "type": "main", "index": 1 } ] ] },
+    "Transcribir Audio (Whisper)": { "main": [ [ { "node": "Unificar entrada", "type": "main", "index": 0 } ] ] },
+    "Unificar entrada": { "main": [ [ { "node": "Redi (AI Agent)", "type": "main", "index": 0 } ] ] },
+    "GPT-4o": { "ai_languageModel": [ [ { "node": "Redi (AI Agent)", "type": "ai_languageModel", "index": 0 } ] ] },
+    "Memoria por contacto": { "ai_memory": [ [ { "node": "Redi (AI Agent)", "type": "ai_memory", "index": 0 } ] ] },
+    "Consultar_Catalogo": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Guardar_Lead": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Agendar_Llamada": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Registrar_Cliente": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Derivar_a_Humano": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Redi (AI Agent)": { "main": [ [ { "node": "¿Por qué canal respondo?", "type": "main", "index": 0 } ] ] },
+    "¿Por qué canal respondo?": { "main": [ [ { "node": "Responder WhatsApp", "type": "main", "index": 0 } ], [ { "node": "Responder Instagram", "type": "main", "index": 0 } ], [ { "node": "Responder Email", "type": "main", "index": 0 } ] ] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [ { "name": "Redi" } ]
+}
