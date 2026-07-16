@@ -26,11 +26,14 @@
 | Pilotear el *"no me alcanza"* y recotizar de cero | ✅ | `brain/redi-system-prompt.md` |
 | **Seña 50%** por transferencia (solo si rechaza la llamada) | ✅ | `config_operativa.sena` |
 | Detectar **urgencia** → prioriza y adelanta la llamada | ✅ | tools `Guardar_Lead` + `Derivar_a_Humano` |
+| **Memoria persistente** (recuerda y saluda "hola de nuevo") | ✅ | `Memoria persistente (Postgres)` |
+| **Buffer de mensajes** (junta los cortos seguidos) | ✅ | nodos `Bufferizar` + `Esperar 8s` |
+| **CRM completo** (qué quiere, presupuesto, pagos, saldo, entrega) | ✅ | tools `Cargar_CRM` + `Actualizar_Pago` |
 | Responder FAQ desde **Base de Conocimiento** en el Sheet | ✅ | tool `Consultar_BaseConocimiento` |
 | Captar y guardar leads | ✅ | tool `Guardar_Lead` |
 | Agendar llamadas con Luca (Google Calendar) | ✅ | tool `Agendar_Llamada` |
-| Registrar clientes cerrados en Sheets | ✅ | tool `Registrar_Cliente` |
 | Pasar a humano cuando lo piden | ✅ | tool `Derivar_a_Humano` |
+| **Informe diario solo si hubo movimiento** (si no, no gasta nada) | ✅ | `n8n/redi-informe-diario.json` |
 | Seguimiento a leads fríos (**A/B testing**) + satisfacción | ✅ | `n8n/redi-seguimiento.json` |
 | Reporte semanal con métricas + **posts de Meta** + consejos IA | ✅ | `n8n/redi-reporte-semanal.json` |
 | Disciplina de costos (temp 0.3, tokens y memoria acotados) | ✅ | `n8n/redi-cerebro.json` |
@@ -47,9 +50,10 @@ Redi/
 │   ├── catalogo.json             ← espejo del Sheet (14 servicios + combos + web + personalizados)
 │   └── redi-system-prompt.md     ← el "cerebro": personalidad + árbol de cotización
 ├── n8n/
-│   ├── redi-cerebro.json         ← workflow principal: multicanal + AI Agent + tools
-│   ├── redi-seguimiento.json     ← cron diario: leads fríos + satisfacción
-│   └── redi-reporte-semanal.json ← cron viernes: reporte para Luca
+│   ├── redi-cerebro.json         ← workflow principal: multicanal + memoria + buffer + AI Agent + tools + CRM
+│   ├── redi-informe-diario.json  ← cron diario 20:00: resumen SOLO si hubo movimiento
+│   ├── redi-seguimiento.json     ← cron diario: leads fríos (A/B) + satisfacción
+│   └── redi-reporte-semanal.json ← cron viernes: reporte con métricas + posts de Meta
 └── docs/
     └── SETUP.md                  ← puesta en marcha paso a paso
 ```

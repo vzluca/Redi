@@ -1,0 +1,135 @@
+{
+  "name": "Redi — Informe Diario (solo si hay movimiento)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📆 INFORME DIARIO\nCada día a las 20:00 revisa si hubo movimiento (leads nuevos, ventas,\npagos, llamadas del día y saldos pendientes).\n\n**Si NO hubo movimiento → corta ANTES de llamar a la IA y NO manda nada**\n(no gasta tokens ni te molesta).\n\nSi hubo → arma un resumen corto con gpt-4o-mini y te lo manda por WhatsApp.",
+        "height": 240,
+        "width": 420,
+        "color": 6
+      },
+      "id": "note",
+      "name": "Nota",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-480, -280]
+    },
+    {
+      "parameters": { "rule": { "interval": [ { "field": "cronExpression", "expression": "0 20 * * *" } ] } },
+      "id": "cron",
+      "name": "Cada día 20:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-460, 0]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Leads" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "leads",
+      "name": "Leer Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-220, -100]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "CRM Clientes" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "crm",
+      "name": "Leer CRM",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-220, 80]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Agenda" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "agenda",
+      "name": "Leer Agenda",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-220, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calcula el movimiento del DÍA. Si no hay nada, devuelve [] y el flujo corta acá.\nconst leads = $('Leer Leads').all().map(i => i.json);\nconst crm = $('Leer CRM').all().map(i => i.json);\nconst agenda = $('Leer Agenda').all().map(i => i.json);\nconst hoyStr = new Date().toISOString().slice(0,10);\nconst esHoy = (f) => (f || '').toString().slice(0,10) === hoyStr;\n\nconst leadsHoy = leads.filter(l => esHoy(l.fecha));\nconst altasHoy = crm.filter(c => esHoy(c.fecha_alta));\nconst pagosHoy = crm.filter(c => esHoy(c.fecha_pago) && Number(c.monto_pagado) > 0);\nconst llamadasHoy = agenda.filter(a => esHoy(a.fecha_hora || a.fecha));\n\n// Saldos pendientes (control de lo que falta cobrar) — para recordarte\nconst saldos = crm.filter(c => Number(c.saldo_pendiente) > 0)\n  .map(c => ({ nombre: c.nombre, saldo: c.saldo_pendiente, estado: c.estado_proyecto }));\n\nconst huboMovimiento = leadsHoy.length + altasHoy.length + pagosHoy.length + llamadasHoy.length > 0;\nif (!huboMovimiento) { return []; } // ← corta acá, no manda nada, no gasta IA\n\nreturn [{ json: {\n  fecha: hoyStr,\n  leads_hoy: leadsHoy.length,\n  leads_detalle: leadsHoy.map(l => ({ nombre: l.nombre, canal: l.canal, interes: l.interes, prioridad: l.prioridad })),\n  altas_hoy: altasHoy.length,\n  altas_detalle: altasHoy.map(c => ({ nombre: c.nombre, servicios: c.servicios, total: c.presupuesto_total, estado: c.estado_proyecto })),\n  pagos_hoy: pagosHoy.map(c => ({ nombre: c.nombre, monto: c.monto_pagado, estado: c.pago_estado })),\n  llamadas_hoy: llamadasHoy.map(a => ({ nombre: a.nombre, hora: a.fecha_hora, tema: a.tema })),\n  saldos_pendientes: saldos\n}}];"
+      },
+      "id": "mov",
+      "name": "¿Hubo movimiento?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [60, 80]
+    },
+    {
+      "parameters": {
+        "modelId": { "__rl": true, "mode": "list", "value": "gpt-4o-mini" },
+        "messages": {
+          "values": [
+            { "role": "system", "content": "Sos Redi, asistente de RedLabs. Escribí un informe diario CORTO para Luca con el movimiento del día. Tono cercano, español rioplatense. Incluí: leads nuevos (y si hay prioritarios), ventas/altas, pagos recibidos, llamadas del día y un recordatorio de saldos pendientes por cobrar. Si un dato viene vacío, no lo menciones. Máx 150 palabras. Usá emojis con moderación." },
+            { "role": "user", "content": "=Movimiento del día:\\n{{ JSON.stringify($json, null, 2) }}" }
+          ]
+        },
+        "options": { "temperature": 0.4, "maxTokens": 350 }
+      },
+      "id": "ai",
+      "name": "Redactar informe (mini)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [320, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const texto = $json.message?.content || $json.text || '';\nreturn [{ json: { body: '📆 *Informe del día — RedLabs*\\n\\n' + texto } }];"
+      },
+      "id": "fmt",
+      "name": "Formatear",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [580, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://waba-v2.360dialog.io/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "D360-API-KEY", "value": "PEGAR_API_KEY_360" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"NUMERO_DE_LUCA\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.body }}\" }\n}",
+        "options": {}
+      },
+      "id": "send",
+      "name": "Enviar a Luca (WhatsApp)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 80]
+    }
+  ],
+  "connections": {
+    "Cada día 20:00": { "main": [ [ { "node": "Leer Leads", "type": "main", "index": 0 }, { "node": "Leer CRM", "type": "main", "index": 0 }, { "node": "Leer Agenda", "type": "main", "index": 0 } ] ] },
+    "Leer Leads": { "main": [ [ { "node": "¿Hubo movimiento?", "type": "main", "index": 0 } ] ] },
+    "Leer CRM": { "main": [ [ { "node": "¿Hubo movimiento?", "type": "main", "index": 0 } ] ] },
+    "Leer Agenda": { "main": [ [ { "node": "¿Hubo movimiento?", "type": "main", "index": 0 } ] ] },
+    "¿Hubo movimiento?": { "main": [ [ { "node": "Redactar informe (mini)", "type": "main", "index": 0 } ] ] },
+    "Redactar informe (mini)": { "main": [ [ { "node": "Formatear", "type": "main", "index": 0 } ] ] },
+    "Formatear": { "main": [ [ { "node": "Enviar a Luca (WhatsApp)", "type": "main", "index": 0 } ] ] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [ { "name": "Redi" } ]
+}

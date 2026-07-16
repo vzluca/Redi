@@ -17,14 +17,18 @@ en la **fila 1**:
 | `Base Conocimiento` | `pregunta`, `respuesta`, `categoria` |
 | `Leads` | `fecha`, `nombre`, `contacto`, `canal`, `interes`, `resumen`, `score`, `prioridad`, `estado`, `ultimo_seguimiento`, `variante` |
 | `Agenda` | `fecha_hora`, `nombre`, `contacto`, `tema`, `estado` |
-| `Clientes Activos` | `nombre_empresa`, `contacto`, `servicios`, `modelo`, `precio_impl`, `cuota_mensual`, `fecha_inicio`, `estado`, `encuesta_mes` |
+| `CRM Clientes` | `fecha_alta`, `nombre`, `contacto`, `canal`, `que_quiere`, `servicios`, `presupuesto_total`, `detalle_presupuesto`, `modelo`, `pago_estado`, `monto_pagado`, `fecha_pago`, `saldo_pendiente`, `fecha_entrega_estimada`, `estado_proyecto`, `notas`, `encuesta_mes` |
 
-> **`Base Conocimiento`** es lo que pediste: Redi responde las preguntas frecuentes
-> leyendo esta hoja. Cargá ahí las típicas (qué es RedLabs, cómo es el proceso, formas de
-> pago, etc.). No hace falta tocar código: agregás una fila y Redi ya la usa.
+> **`CRM Clientes`** es tu base de datos de control total (lo que pediste). Redi la carga y la
+> actualiza sola: quién es, cómo contactarlo, qué quiere, el presupuesto pasado y qué incluye, si
+> pagó, cuánto, qué día, **cuánto falta pagar**, la entrega estimada y el estado del proyecto. Es
+> una hoja de Google (o sea, tipo Excel, exportable). En la Etapa 2 esto también se ve en el panel (Firebase).
+> - `pago_estado`: **No pagó** · **Seña (50%)** · **Pagado total**
+> - `estado_proyecto`: **Presupuestado** · **Señado** · **Esperando material** · **En curso** · **Entregado** · **Cerrado** · **Perdido**
+> - Redi cuenta los que están **`En curso`** para estimar el tiempo de entrega.
 >
-> **`estado`** en `Clientes Activos`: usá **`En curso`** para los proyectos que Luca está
-> haciendo ahora. Redi cuenta esos para estimar el tiempo de entrega.
+> **`Base Conocimiento`**: Redi responde las preguntas frecuentes leyendo esta hoja. Cargás una
+> fila (pregunta/respuesta) y ya la usa, sin tocar código.
 
 > Copiá el **ID del Sheet**: está en la URL, entre `/d/` y `/edit`.
 > `https://docs.google.com/spreadsheets/d/`**`ESTE_ES_EL_ID`**`/edit`
@@ -37,6 +41,12 @@ En n8n → **Credentials**, creá:
 - **Google Sheets / Calendar / Gmail** — con OAuth de la cuenta de RedLabs.
 - **360dialog (WhatsApp)** — la API key va en los nodos HTTP (no necesita credencial de n8n).
 - **Meta (Instagram)** — el Page Access Token va en el nodo HTTP de Instagram.
+- **Postgres** — para la **memoria persistente** de Redi (que recuerde conversaciones
+  anteriores). Si no tenés una base, creá una gratis en **Supabase** o **Neon** (2 min, sin
+  tarjeta) y cargá los datos de conexión en la credencial Postgres de n8n. El nodo
+  `Memoria persistente (Postgres)` crea solo su tabla (`redi_memoria`).
+  *(Alternativa sin base: cambiar ese nodo por "Simple Memory", pero se pierde la memoria si n8n
+  se reinicia y no recuerda entre conversaciones — no recomendado.)*
 
 ## 3. Importar los workflows
 
@@ -67,6 +77,10 @@ En n8n → **Workflows → Import from File**, importá:
 
 ## 5. Configurar los crons
 
+- `redi-informe-diario.json`: reemplazá `PEGAR_ID_DEL_SHEET`, la API key de 360dialog y
+  `NUMERO_DE_LUCA`. Corre todos los días 20:00 y te manda el resumen del día
+  **SOLO si hubo movimiento** (leads, ventas, pagos o llamadas). Si el día estuvo tranquilo,
+  **no manda nada y no gasta tokens** (corta antes de llamar a la IA).
 - `redi-seguimiento.json`: reemplazá `PEGAR_ID_DEL_SHEET`, la API key de 360dialog y
   la credencial de Google. Corre todos los días 10:00. Hace **A/B testing**: alterna 2
   versiones del mensaje de reactivación y guarda la `variante` (A/B) para medir cuál cierra más.
@@ -74,6 +88,13 @@ En n8n → **Workflows → Import from File**, importá:
   manda el reporte por WhatsApp y email, incluyendo **qué publicación rindió más** (Meta).
   Para eso, en el nodo `Traer Insights (Meta)` reemplazá `PEGAR_INSTAGRAM_BUSINESS_ID` y
   `PEGAR_PAGE_ACCESS_TOKEN`. Si no lo configurás, el reporte igual sale (sin la parte de posts).
+
+### Memoria y buffer (ya vienen en el Cerebro)
+- **Memoria persistente:** Redi recuerda conversaciones anteriores por contacto. Si un cliente
+  vuelve a escribir a la semana, lo saluda con *"¡Hola de nuevo!"* y retoma sin re-presentarse.
+- **Buffer de mensajes:** si el cliente manda varios mensajes cortos seguidos, Redi espera ~8
+  segundos y los junta como uno solo antes de responder (podés cambiar el tiempo en el nodo
+  `Esperar 8s`).
 
 ## 6. Cotización: datos que tenés que setear vos
 

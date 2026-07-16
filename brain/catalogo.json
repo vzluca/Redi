@@ -278,13 +278,16 @@
   "config_operativa": {
     "tiempos_entrega": {
       "unidad": "dias_habiles",
-      "nota": "dias_base = tiempo si Luca lo hiciera solo, sin nada más en curso. El tiempo real se estira según cuántos proyectos haya en curso (ver formula). AJUSTAR estos números con Luca.",
+      "arranca_desde_material": true,
+      "regla_material": "IMPORTANTE: el plazo SIEMPRE cuenta desde que el cliente entrega el material y los accesos necesarios (textos, fotos, keys, etc.), NO desde que dice que sí. Redi tiene que aclararlo siempre.",
+      "minimo_realista": 5,
+      "nota": "dias_base = tiempo desde que llega el material, si Luca lo hiciera solo. Los flujos predefinidos ya están prearmados: por eso pueden salir en ~5 días una vez que el cliente manda los accesos. Los proyectos web y a medida tardan más. El tiempo real se estira según cuántos proyectos haya en curso (ver formula). AJUSTAR con Luca.",
       "base_por_servicio": {
-        "S01": 3, "S02": 4, "S03": 3, "S04": 3, "S05": 3, "S06": 4, "S07": 2,
-        "S08": 3, "S09": 2, "S10": 3, "S11": 4, "S12": 3, "S13": 2, "S14": 7,
-        "W01": 7, "W02": 20
+        "S01": 5, "S02": 5, "S03": 5, "S04": 5, "S05": 5, "S06": 5, "S07": 5,
+        "S08": 5, "S09": 5, "S10": 5, "S11": 6, "S12": 5, "S13": 5, "S14": 8,
+        "W01": 7, "W02": 25
       },
-      "base_por_combo": { "C01": 6, "C02": 10, "C03": 14, "C04": 8, "C05": 10, "C06": 6, "C07": 6 },
+      "base_por_combo": { "C01": 8, "C02": 12, "C03": 18, "C04": 10, "C05": 12, "C06": 8, "C07": 8 },
       "formula": {
         "capacidad_paralela": 2,
         "modelo": "reparto_parejo",
@@ -292,6 +295,18 @@
         "buffer_dias": 2,
         "rango_pct": 0.2
       }
+    },
+    "crm": {
+      "hoja": "CRM Clientes",
+      "descripcion": "Base de datos completa para que Luca lleve control absoluto. Redi la actualiza sola.",
+      "columnas": [
+        "fecha_alta", "nombre", "contacto", "canal", "que_quiere",
+        "servicios", "presupuesto_total", "detalle_presupuesto", "modelo",
+        "pago_estado", "monto_pagado", "fecha_pago", "saldo_pendiente",
+        "fecha_entrega_estimada", "estado_proyecto", "notas"
+      ],
+      "pago_estado_valores": ["No pagó", "Seña (50%)", "Pagado total"],
+      "estado_proyecto_valores": ["Presupuestado", "Señado", "Esperando material", "En curso", "Entregado", "Cerrado", "Perdido"]
     },
     "sena": {
       "porcentaje": 50,
