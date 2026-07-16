@@ -51,7 +51,7 @@
     {
       "parameters": {
         "operation": "getAll",
-        "sheetName": { "__rl": true, "mode": "list", "value": "Clientes Activos" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "CRM Clientes" },
         "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
         "returnAll": true,
         "options": {}
@@ -64,7 +64,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Clientes con 30+ días y sin encuesta enviada este mes\nconst hoy = new Date();\nreturn items.filter(i => {\n  const j = i.json;\n  if ((j.estado || '') !== 'Activo' && (j.estado || '') !== 'Nuevo') return false;\n  const inicio = new Date(j.fecha_inicio);\n  const dias = (hoy - inicio) / (1000*60*60*24);\n  return dias >= 30 && (j.encuesta_mes || '') !== (hoy.getFullYear()+'-'+(hoy.getMonth()+1));\n}).map(i => ({ json: {\n  to: i.json.contacto,\n  nombre: i.json.nombre_empresa || '',\n  tipo: 'satisfaccion'\n}}));"
+        "jsCode": "// Clientes con proyecto entregado/en curso hace 30+ días y sin encuesta este mes\nconst hoy = new Date();\nreturn items.filter(i => {\n  const j = i.json;\n  const est = j.estado_proyecto || '';\n  if (est !== 'En curso' && est !== 'Entregado' && est !== 'Cerrado') return false;\n  const inicio = new Date(j.fecha_alta);\n  const dias = (hoy - inicio) / (1000*60*60*24);\n  return dias >= 30 && (j.encuesta_mes || '') !== (hoy.getFullYear()+'-'+(hoy.getMonth()+1));\n}).map(i => ({ json: {\n  to: i.json.contacto,\n  nombre: i.json.nombre || '',\n  tipo: 'satisfaccion'\n}}));"
       },
       "id": "filter-clientes",
       "name": "Clientes para encuestar",

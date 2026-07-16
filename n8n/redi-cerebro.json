@@ -3,16 +3,16 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## 🧠 REDI — CEREBRO\nAtiende WhatsApp, Instagram y Email. Descubre qué necesita el cliente,\ncotiza desde el Sheet, estima la entrega, agenda llamadas, guarda leads\ny deriva a Luca.\n\n**Antes de activar:**\n1. Pegá `brain/redi-system-prompt.md` en 'Redi (AI Agent)'.\n2. Cargá credenciales y reemplazá los `PEGAR_...`.\n3. Config de IA ya optimizada (temp 0.3, tokens acotados, memoria 12).",
-        "height": 280,
-        "width": 440,
+        "content": "## 🧠 REDI — CEREBRO\nAtiende WhatsApp, Instagram y Email. Descubre qué necesita el cliente,\ncotiza desde el Sheet, estima la entrega (desde que llega el material),\nagenda llamadas, actualiza el CRM y deriva a Luca.\n\n**Memoria persistente (Postgres):** recuerda conversaciones anteriores →\nsaluda 'hola de nuevo' sin volver a presentarse.\n**Buffer de mensajes:** si mandan varios cortos seguidos, espera ~8s y los\njunta como uno solo.\n\n**Antes de activar:** pegá `brain/redi-system-prompt.md` en 'Redi (AI Agent)',\ncargá credenciales y reemplazá los `PEGAR_...`.",
+        "height": 320,
+        "width": 460,
         "color": 4
       },
       "id": "note-header",
       "name": "Nota — Cómo usar",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-460, -360]
+      "position": [-460, -400]
     },
     {
       "parameters": { "httpMethod": "POST", "path": "redi-whatsapp", "options": {} },
@@ -83,7 +83,7 @@
       "name": "¿Es audio?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [120, 120]
+      "position": [80, 120]
     },
     {
       "parameters": { "resource": "audio", "operation": "transcribe", "options": { "language": "es" } },
@@ -91,7 +91,7 @@
       "name": "Transcribir Audio (Whisper)",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [360, 0]
+      "position": [320, 0]
     },
     {
       "parameters": { "mode": "combine", "combineBy": "combineAll", "options": {} },
@@ -99,14 +99,43 @@
       "name": "Unificar entrada",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
-      "position": [600, 120]
+      "position": [540, 120]
+    },
+    {
+      "parameters": {
+        "jsCode": "// BUFFER anti-mensajes-cortos: guarda el mensaje y marca su timestamp.\n// Después del Wait, solo el ÚLTIMO mensaje del contacto sigue; ese junta todo.\nconst store = $getWorkflowStaticData('global');\nstore.buffers = store.buffers || {};\nconst key = $json.sessionId;\nconst now = Date.now();\nconst buf = store.buffers[key] || { msgs: [], lastTs: 0 };\nif ($json.text && $json.text.trim()) buf.msgs.push($json.text.trim());\nbuf.lastTs = now;\nstore.buffers[key] = buf;\nreturn [{ json: { ...$json, _myTs: now } }];"
+      },
+      "id": "buffer",
+      "name": "Bufferizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 120]
+    },
+    {
+      "parameters": { "amount": 8, "unit": "seconds" },
+      "id": "wait",
+      "name": "Esperar 8s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [900, 120],
+      "webhookId": "redi-wait"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ¿Soy el último mensaje del contacto? Si llegó otro después, este se descarta\n// (el más nuevo procesará todo). Si soy el último, junto todos los mensajes en uno.\nconst store = $getWorkflowStaticData('global');\nstore.buffers = store.buffers || {};\nconst key = $json.sessionId;\nconst buf = store.buffers[key];\nif (!buf || buf.lastTs !== $json._myTs) { return []; }\nconst fullText = buf.msgs.join('\\n');\ndelete store.buffers[key];\nreturn [{ json: { ...$json, text: fullText } }];"
+      },
+      "id": "islast",
+      "name": "¿Último mensaje?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1060, 120]
     },
     {
       "parameters": {
         "promptType": "define",
         "text": "={{ $json.text }}",
         "options": {
-          "systemMessage": "PEGAR ACÁ el contenido completo de brain/redi-system-prompt.md. (Redi: descubre qué necesita el cliente con preguntas, recomienda lo mínimo que sirve, cotiza desde el Sheet con desglose y tiempo de entrega, ofrece llamada con Luca y recién si la rechazan pasa la seña 50% por transferencia. Nunca dice 'nodos'. Sé conciso y no llames tools de más.)",
+          "systemMessage": "PEGAR ACÁ el contenido completo de brain/redi-system-prompt.md. (Redi: si ya habló antes con el contacto, saluda 'hola de nuevo' sin re-presentarse. Descubre qué necesita con preguntas, recomienda lo mínimo, cotiza desde el Sheet con desglose y tiempo de entrega -aclarando que cuenta desde que el cliente manda el material-, ofrece llamada y recién si la rechazan pasa la seña 50%. Carga y actualiza el CRM. Nunca dice 'nodos'. Conciso, sin tools de más.)",
           "maxIterations": 6
         }
       },
@@ -114,26 +143,31 @@
       "name": "Redi (AI Agent)",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.9,
-      "position": [860, 120]
+      "position": [1280, 120]
     },
     {
       "parameters": {
         "model": { "__rl": true, "mode": "list", "value": "gpt-4o" },
-        "options": { "temperature": 0.3, "maxTokens": 500 }
+        "options": { "temperature": 0.3, "maxTokens": 550 }
       },
       "id": "llm",
-      "name": "GPT-4o (temp 0.3, 500 tok)",
+      "name": "GPT-4o (temp 0.3, 550 tok)",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
-      "position": [700, 360]
+      "position": [1120, 380]
     },
     {
-      "parameters": { "sessionIdType": "customKey", "sessionKey": "={{ $json.sessionId }}", "contextWindowLength": 12 },
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindowLength": 30,
+        "tableName": "redi_memoria"
+      },
       "id": "memory",
-      "name": "Memoria por contacto (12)",
-      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "name": "Memoria persistente (Postgres)",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
-      "position": [840, 360]
+      "position": [1260, 380]
     },
     {
       "parameters": {
@@ -149,12 +183,12 @@
       "name": "Consultar_Catalogo",
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.5,
-      "position": [960, 360]
+      "position": [1000, 620]
     },
     {
       "parameters": {
         "descriptionType": "manual",
-        "toolDescription": "Responde preguntas frecuentes leyendo la hoja 'Base Conocimiento' (columnas: pregunta, respuesta, categoria). Usar para dudas típicas sobre RedLabs, proceso, formas de pago, etc.",
+        "toolDescription": "Responde preguntas frecuentes leyendo la hoja 'Base Conocimiento' (columnas: pregunta, respuesta, categoria).",
         "operation": "getAll",
         "sheetName": { "__rl": true, "mode": "list", "value": "Base Conocimiento" },
         "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
@@ -165,36 +199,36 @@
       "name": "Consultar_BaseConocimiento",
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.5,
-      "position": [1080, 360]
+      "position": [1120, 620]
     },
     {
       "parameters": {
         "descriptionType": "manual",
-        "toolDescription": "Devuelve los proyectos que Luca tiene 'En curso' en la hoja 'Clientes Activos'. Usar para contar cuántos hay en curso y estimar el tiempo de entrega.",
+        "toolDescription": "Devuelve los proyectos que Luca tiene 'En curso' en el CRM. Usar para contar cuántos hay en curso y estimar el tiempo de entrega.",
         "operation": "getAll",
-        "sheetName": { "__rl": true, "mode": "list", "value": "Clientes Activos" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "CRM Clientes" },
         "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
         "returnAll": true,
-        "filtersUI": { "values": [ { "lookupColumn": "estado", "lookupValue": "En curso" } ] },
+        "filtersUI": { "values": [ { "lookupColumn": "estado_proyecto", "lookupValue": "En curso" } ] },
         "options": {}
       },
       "id": "tool-wip",
       "name": "Ver_Proyectos_En_Curso",
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.5,
-      "position": [1200, 360]
+      "position": [1240, 620]
     },
     {
       "parameters": {
         "name": "Calcular_Entrega",
-        "description": "Estima el tiempo de entrega en días hábiles. Pasá un JSON string: {\"dias_base\": N, \"en_curso\": M}. 'dias_base' sale de config_operativa.tiempos_entrega del catálogo; 'en_curso' es la cantidad de proyectos que Luca ya tiene en curso (usar Ver_Proyectos_En_Curso). Devuelve un rango tipo 'X a Y días hábiles'.",
-        "jsCode": "// Modelo 'reparto parejo': con K proyectos a la vez, cada uno tarda dias_base*K.\n// Capacidad 2 en paralelo; si está llena, el nuevo espera en cola. Ajustar con Luca.\nlet p; try { p = JSON.parse(query); } catch (e) { p = {}; }\nconst diasBase = Number(p.dias_base) || 5;\nconst enCurso = Number(p.en_curso) || 0;\nconst capacidad = 2;   // proyectos en paralelo\nconst buffer = 2;      // holgura en días\nconst rangoPct = 0.2;  // ancho del rango\nlet dias;\nif (enCurso < capacidad) {\n  const simultaneos = Math.min(enCurso + 1, capacidad);\n  dias = diasBase * simultaneos;\n} else {\n  const esperaCola = diasBase; // ~una tanda para que se libere un lugar\n  dias = esperaCola + diasBase * capacidad;\n}\ndias += buffer;\nconst min = dias;\nconst max = Math.ceil(dias * (1 + rangoPct));\nreturn `${min} a ${max} días hábiles`;"
+        "description": "Estima el tiempo de entrega en días hábiles DESDE QUE EL CLIENTE ENTREGA EL MATERIAL. Pasá un JSON string: {\"dias_base\": N, \"en_curso\": M}. 'dias_base' sale de config_operativa.tiempos_entrega del catálogo; 'en_curso' es la cantidad de proyectos en curso (usar Ver_Proyectos_En_Curso). Devuelve un rango tipo 'X a Y días hábiles'. Aclarar SIEMPRE que cuenta desde que llega el material/accesos.",
+        "jsCode": "// Modelo 'reparto parejo': con K proyectos a la vez, cada uno tarda dias_base*K.\n// Capacidad 2 en paralelo; si está llena, el nuevo espera en cola.\n// El plazo cuenta DESDE que el cliente entrega el material. Ajustar con Luca.\nlet p; try { p = JSON.parse(query); } catch (e) { p = {}; }\nconst diasBase = Number(p.dias_base) || 5;\nconst enCurso = Number(p.en_curso) || 0;\nconst capacidad = 2;\nconst buffer = 2;\nconst rangoPct = 0.2;\nlet dias;\nif (enCurso < capacidad) {\n  const simultaneos = Math.min(enCurso + 1, capacidad);\n  dias = diasBase * simultaneos;\n} else {\n  const esperaCola = diasBase;\n  dias = esperaCola + diasBase * capacidad;\n}\ndias += buffer;\nconst min = dias;\nconst max = Math.ceil(dias * (1 + rangoPct));\nreturn `${min} a ${max} días hábiles (a partir de que el cliente entregue el material y los accesos)`;"
       },
       "id": "tool-entrega",
       "name": "Calcular_Entrega",
       "type": "@n8n/n8n-nodes-langchain.toolCode",
       "typeVersion": 1.1,
-      "position": [1320, 360]
+      "position": [1360, 620]
     },
     {
       "parameters": {
@@ -223,7 +257,7 @@
       "name": "Guardar_Lead",
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.5,
-      "position": [1440, 360]
+      "position": [1480, 620]
     },
     {
       "parameters": {
@@ -242,35 +276,70 @@
       "name": "Agendar_Llamada",
       "type": "n8n-nodes-base.googleCalendarTool",
       "typeVersion": 1.3,
-      "position": [1560, 360]
+      "position": [1600, 620]
     },
     {
       "parameters": {
         "descriptionType": "manual",
-        "toolDescription": "Registra un cliente cerrado en 'Clientes Activos'. Usar al confirmar la venta. Poné estado 'En curso' si Luca ya arranca.",
+        "toolDescription": "Carga un cliente/proyecto en el CRM ('CRM Clientes') con TODO el detalle para que Luca lleve control. Campos: nombre, contacto, canal, que_quiere, servicios, presupuesto_total, detalle_presupuesto, modelo, pago_estado (No pagó/Seña (50%)/Pagado total), monto_pagado, fecha_pago, saldo_pendiente, fecha_entrega_estimada, estado_proyecto (Presupuestado/Señado/Esperando material/En curso/Entregado/Cerrado/Perdido). Usar al cotizar y al cerrar.",
         "operation": "append",
-        "sheetName": { "__rl": true, "mode": "list", "value": "Clientes Activos" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "CRM Clientes" },
         "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "nombre_empresa": "={{ $fromAI('nombre') }}",
+            "fecha_alta": "={{ $now.toISODate() }}",
+            "nombre": "={{ $fromAI('nombre') }}",
             "contacto": "={{ $fromAI('contacto') }}",
+            "canal": "={{ $fromAI('canal') }}",
+            "que_quiere": "={{ $fromAI('que_quiere') }}",
             "servicios": "={{ $fromAI('servicios') }}",
+            "presupuesto_total": "={{ $fromAI('presupuesto_total') }}",
+            "detalle_presupuesto": "={{ $fromAI('detalle_presupuesto') }}",
             "modelo": "={{ $fromAI('modelo') }}",
-            "precio_impl": "={{ $fromAI('precio_impl') }}",
-            "cuota_mensual": "={{ $fromAI('cuota_mensual') }}",
-            "fecha_inicio": "={{ $now.toISODate() }}",
-            "estado": "En curso"
+            "pago_estado": "={{ $fromAI('pago_estado') }}",
+            "monto_pagado": "={{ $fromAI('monto_pagado') }}",
+            "fecha_pago": "={{ $fromAI('fecha_pago') }}",
+            "saldo_pendiente": "={{ $fromAI('saldo_pendiente') }}",
+            "fecha_entrega_estimada": "={{ $fromAI('fecha_entrega_estimada') }}",
+            "estado_proyecto": "={{ $fromAI('estado_proyecto') }}",
+            "notas": "={{ $fromAI('notas') }}"
           }
         },
         "options": {}
       },
       "id": "tool-cliente",
-      "name": "Registrar_Cliente",
+      "name": "Cargar_CRM",
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.5,
-      "position": [1680, 360]
+      "position": [1720, 620]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Actualiza el pago/estado de un cliente que YA está en el CRM, buscándolo por 'contacto'. Campos: contacto (para encontrarlo), pago_estado, monto_pagado, fecha_pago, saldo_pendiente, estado_proyecto. Usar cuando el cliente paga la seña o el saldo.",
+        "operation": "update",
+        "sheetName": { "__rl": true, "mode": "list", "value": "CRM Clientes" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [ "contacto" ],
+          "value": {
+            "contacto": "={{ $fromAI('contacto') }}",
+            "pago_estado": "={{ $fromAI('pago_estado') }}",
+            "monto_pagado": "={{ $fromAI('monto_pagado') }}",
+            "fecha_pago": "={{ $fromAI('fecha_pago') }}",
+            "saldo_pendiente": "={{ $fromAI('saldo_pendiente') }}",
+            "estado_proyecto": "={{ $fromAI('estado_proyecto') }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "tool-pago",
+      "name": "Actualizar_Pago",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [1840, 620]
     },
     {
       "parameters": {
@@ -288,15 +357,15 @@
       "name": "Derivar_a_Humano",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.2,
-      "position": [1800, 360]
+      "position": [1960, 620]
     },
     {
       "parameters": {
         "rules": {
           "values": [
-            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Unificar entrada').item.json.channel }}", "rightValue": "whatsapp", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "whatsapp" },
-            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Unificar entrada').item.json.channel }}", "rightValue": "instagram", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "instagram" },
-            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('Unificar entrada').item.json.channel }}", "rightValue": "email", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "email" }
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('¿Último mensaje?').item.json.channel }}", "rightValue": "whatsapp", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "whatsapp" },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('¿Último mensaje?').item.json.channel }}", "rightValue": "instagram", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "instagram" },
+            { "conditions": { "options": { "caseSensitive": true, "typeValidation": "loose" }, "conditions": [ { "leftValue": "={{ $('¿Último mensaje?').item.json.channel }}", "rightValue": "email", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "renameOutput": true, "outputKey": "email" }
           ]
         },
         "options": {}
@@ -305,7 +374,7 @@
       "name": "¿Por qué canal respondo?",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
-      "position": [1180, 120]
+      "position": [1600, 120]
     },
     {
       "parameters": {
@@ -315,14 +384,14 @@
         "headerParameters": { "parameters": [ { "name": "D360-API-KEY", "value": "PEGAR_API_KEY_360" } ] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('Unificar entrada').item.json.from }}\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.output }}\" }\n}",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('¿Último mensaje?').item.json.from }}\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.output }}\" }\n}",
         "options": {}
       },
       "id": "send-wpp",
       "name": "Responder WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1460, -40]
+      "position": [1880, -40]
     },
     {
       "parameters": {
@@ -332,20 +401,20 @@
         "headerParameters": { "parameters": [ { "name": "Authorization", "value": "Bearer PEGAR_PAGE_ACCESS_TOKEN" } ] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"recipient\": { \"id\": \"{{ $('Unificar entrada').item.json.from }}\" },\n  \"message\": { \"text\": \"{{ $json.output }}\" }\n}",
+        "jsonBody": "={\n  \"recipient\": { \"id\": \"{{ $('¿Último mensaje?').item.json.from }}\" },\n  \"message\": { \"text\": \"{{ $json.output }}\" }\n}",
         "options": {}
       },
       "id": "send-ig",
       "name": "Responder Instagram",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1460, 120]
+      "position": [1880, 120]
     },
     {
       "parameters": {
         "resource": "message",
         "operation": "reply",
-        "messageId": "={{ $('Unificar entrada').item.json.threadId }}",
+        "messageId": "={{ $('¿Último mensaje?').item.json.threadId }}",
         "message": "={{ $json.output }}",
         "options": {}
       },
@@ -353,7 +422,7 @@
       "name": "Responder Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [1460, 280]
+      "position": [1880, 280]
     }
   ],
   "connections": {
@@ -365,16 +434,20 @@
     "Normalizar Email": { "main": [ [ { "node": "¿Es audio?", "type": "main", "index": 0 } ] ] },
     "¿Es audio?": { "main": [ [ { "node": "Transcribir Audio (Whisper)", "type": "main", "index": 0 } ], [ { "node": "Unificar entrada", "type": "main", "index": 1 } ] ] },
     "Transcribir Audio (Whisper)": { "main": [ [ { "node": "Unificar entrada", "type": "main", "index": 0 } ] ] },
-    "Unificar entrada": { "main": [ [ { "node": "Redi (AI Agent)", "type": "main", "index": 0 } ] ] },
-    "GPT-4o (temp 0.3, 500 tok)": { "ai_languageModel": [ [ { "node": "Redi (AI Agent)", "type": "ai_languageModel", "index": 0 } ] ] },
-    "Memoria por contacto (12)": { "ai_memory": [ [ { "node": "Redi (AI Agent)", "type": "ai_memory", "index": 0 } ] ] },
+    "Unificar entrada": { "main": [ [ { "node": "Bufferizar", "type": "main", "index": 0 } ] ] },
+    "Bufferizar": { "main": [ [ { "node": "Esperar 8s", "type": "main", "index": 0 } ] ] },
+    "Esperar 8s": { "main": [ [ { "node": "¿Último mensaje?", "type": "main", "index": 0 } ] ] },
+    "¿Último mensaje?": { "main": [ [ { "node": "Redi (AI Agent)", "type": "main", "index": 0 } ] ] },
+    "GPT-4o (temp 0.3, 550 tok)": { "ai_languageModel": [ [ { "node": "Redi (AI Agent)", "type": "ai_languageModel", "index": 0 } ] ] },
+    "Memoria persistente (Postgres)": { "ai_memory": [ [ { "node": "Redi (AI Agent)", "type": "ai_memory", "index": 0 } ] ] },
     "Consultar_Catalogo": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Consultar_BaseConocimiento": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Ver_Proyectos_En_Curso": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Calcular_Entrega": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Guardar_Lead": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Agendar_Llamada": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
-    "Registrar_Cliente": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Cargar_CRM": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Actualizar_Pago": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Derivar_a_Humano": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Redi (AI Agent)": { "main": [ [ { "node": "¿Por qué canal respondo?", "type": "main", "index": 0 } ] ] },
     "¿Por qué canal respondo?": { "main": [ [ { "node": "Responder WhatsApp", "type": "main", "index": 0 } ], [ { "node": "Responder Instagram", "type": "main", "index": 0 } ], [ { "node": "Responder Email", "type": "main", "index": 0 } ] ] }
