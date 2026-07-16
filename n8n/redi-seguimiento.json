@@ -1,0 +1,124 @@
+{
+  "name": "Redi — Seguimiento y Satisfacción",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🔁 SEGUIMIENTO Y SATISFACCIÓN\nCada día revisa la hoja 'Leads' y 'Clientes Activos'.\n- Leads sin respuesta hace 2+ días → mensaje de reactivación.\n- Clientes con 30+ días activos → encuesta de satisfacción.\nLas respuestas vuelven al Cerebro por WhatsApp y se registran.",
+        "height": 220,
+        "width": 380,
+        "color": 5
+      },
+      "id": "note1",
+      "name": "Nota",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-460, -260]
+    },
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "cronExpression", "expression": "0 10 * * *" } ] }
+      },
+      "id": "cron",
+      "name": "Cada día 10:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-440, 0]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Leads" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "read-leads",
+      "name": "Leer Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-200, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filtra leads sin respuesta hace 2+ días y sin marca de seguimiento cerrado\nconst hoy = new Date();\nreturn items.filter(i => {\n  const j = i.json;\n  if ((j.estado || '').toLowerCase() === 'cerrado') return false;\n  if ((j.ultimo_seguimiento || '') === 'hecho') return false;\n  const fecha = new Date(j.fecha);\n  const dias = (hoy - fecha) / (1000*60*60*24);\n  return dias >= 2;\n}).map(i => ({ json: {\n  to: i.json.contacto,\n  nombre: i.json.nombre || '',\n  interes: i.json.interes || 'tu consulta',\n  tipo: 'reactivacion'\n}}));"
+      },
+      "id": "filter-leads",
+      "name": "Leads fríos (2+ días)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [40, -80]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Clientes Activos" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "read-clientes",
+      "name": "Leer Clientes",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-200, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clientes con 30+ días y sin encuesta enviada este mes\nconst hoy = new Date();\nreturn items.filter(i => {\n  const j = i.json;\n  if ((j.estado || '') !== 'Activo' && (j.estado || '') !== 'Nuevo') return false;\n  const inicio = new Date(j.fecha_inicio);\n  const dias = (hoy - inicio) / (1000*60*60*24);\n  return dias >= 30 && (j.encuesta_mes || '') !== (hoy.getFullYear()+'-'+(hoy.getMonth()+1));\n}).map(i => ({ json: {\n  to: i.json.contacto,\n  nombre: i.json.nombre_empresa || '',\n  tipo: 'satisfaccion'\n}}));"
+      },
+      "id": "filter-clientes",
+      "name": "Clientes para encuestar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [40, 160]
+    },
+    {
+      "parameters": { "mode": "combine", "combineBy": "combineAll", "options": {} },
+      "id": "merge",
+      "name": "Unir destinatarios",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [320, 40]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Arma el mensaje según el tipo\nreturn items.map(i => {\n  const j = i.json;\n  let body;\n  if (j.tipo === 'satisfaccion') {\n    body = `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. ¿Cómo venís con la automatización? Del 1 al 10, ¿qué nota nos pondrías? Si hay algo para mejorar, contame y lo resolvemos.`;\n  } else {\n    body = `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. Quería saber si seguís interesado en ${j.interes}. Si querés, te muestro opciones o coordinamos una llamada corta con Luca. ¿Te sirve?`;\n  }\n  return { json: { to: j.to, body } };\n});"
+      },
+      "id": "build-msg",
+      "name": "Armar mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [560, 40]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://waba-v2.360dialog.io/messages",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "D360-API-KEY", "value": "PEGAR_API_KEY_360" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.to }}\",\n  \"type\": \"text\",\n  \"text\": { \"body\": \"{{ $json.body }}\" }\n}",
+        "options": {}
+      },
+      "id": "send",
+      "name": "Enviar por WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 40]
+    }
+  ],
+  "connections": {
+    "Cada día 10:00": { "main": [ [ { "node": "Leer Leads", "type": "main", "index": 0 }, { "node": "Leer Clientes", "type": "main", "index": 0 } ] ] },
+    "Leer Leads": { "main": [ [ { "node": "Leads fríos (2+ días)", "type": "main", "index": 0 } ] ] },
+    "Leads fríos (2+ días)": { "main": [ [ { "node": "Unir destinatarios", "type": "main", "index": 0 } ] ] },
+    "Leer Clientes": { "main": [ [ { "node": "Clientes para encuestar", "type": "main", "index": 0 } ] ] },
+    "Clientes para encuestar": { "main": [ [ { "node": "Unir destinatarios", "type": "main", "index": 1 } ] ] },
+    "Unir destinatarios": { "main": [ [ { "node": "Armar mensaje", "type": "main", "index": 0 } ] ] },
+    "Armar mensaje": { "main": [ [ { "node": "Enviar por WhatsApp", "type": "main", "index": 0 } ] ] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [ { "name": "Redi" } ]
+}

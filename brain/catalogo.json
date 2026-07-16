@@ -1,0 +1,278 @@
+{
+  "meta": {
+    "empresa": "RedLabs",
+    "propietario": "Luca",
+    "version": "2.0",
+    "moneda": "USD",
+    "precio_nodo_adicional": 15,
+    "limite_cotizacion_automatica_nodos": 30,
+    "nota": "Fuente de verdad = Google Sheet 'Centro de INFO RedLabs'. Este JSON es un espejo para arranque/offline. Redi SIEMPRE lee precios en tiempo real del Sheet; si difieren, gana el Sheet.",
+    "lenguaje_cliente": {
+      "prohibido": ["nodos", "API", "webhook", "endpoint", "token"],
+      "usar_en_su_lugar": ["funciones", "conexiones", "automatización"]
+    }
+  },
+  "servicios": [
+    {
+      "id": "S01",
+      "nombre": "Asistente de Consultas por WhatsApp",
+      "categoria": "atencion_gestion",
+      "incluye": "Responde preguntas frecuentes leyendo tu catálogo/base de datos desde Sheets. Menú con botones. Derivación a humano.",
+      "herramientas": ["n8n", "360dialog", "Google Sheets", "OpenAI (opcional)"],
+      "nodos_base": 8,
+      "precio_alquiler": { "implementacion": 150, "mensual": 35 },
+      "precio_compra": 350,
+      "gancho": "Tu WhatsApp responde solo, las 24hs, sin que se te escape una consulta.",
+      "addons": [
+        { "nombre": "Audios: escucha y entiende mensajes de voz (Whisper)", "nodos": 2, "costo": 30 },
+        { "nombre": "Imágenes: lee e interpreta fotos enviadas (Vision)", "nodos": 2, "costo": 30 },
+        { "nombre": "Archivos: lee PDFs y DOCs adjuntos", "nodos": 2, "costo": 30 },
+        { "nombre": "Videos: transcribe videos enviados por WPP", "nodos": 3, "costo": 45 },
+        { "nombre": "IA dinámica: respuestas generadas por GPT en lugar de fijas", "nodos": 2, "costo": 30 }
+      ]
+    },
+    {
+      "id": "S02",
+      "nombre": "Captación y Calificación de Leads por WhatsApp",
+      "categoria": "atencion_gestion",
+      "incluye": "Flujo de preguntas clave para calificar cualquier consulta entrante. Guarda datos en Sheets. Notifica al equipo con resumen del lead.",
+      "herramientas": ["n8n", "360dialog", "Google Sheets", "Notion (opcional)"],
+      "nodos_base": 9,
+      "precio_alquiler": { "implementacion": 180, "mensual": 40 },
+      "precio_compra": 400,
+      "gancho": "No perdés más un interesado por no llegar a responder a tiempo.",
+      "addons": [
+        { "nombre": "Scoring: puntaje automático según calidad del lead", "nodos": 2, "costo": 30 },
+        { "nombre": "CRM Notion: integra con Notion en lugar de Sheets", "nodos": 1, "costo": 15 },
+        { "nombre": "Sugerencia automática según perfil", "nodos": 2, "costo": 30 },
+        { "nombre": "Email: notificación también por Gmail además de WPP", "nodos": 1, "costo": 15 }
+      ]
+    },
+    {
+      "id": "S03",
+      "nombre": "Seguimiento Automático de Leads",
+      "categoria": "atencion_gestion",
+      "incluye": "Mensajes automáticos a 24/48/72hs. Personalizados con nombre y contexto. Se puede pausar/activar por lead.",
+      "herramientas": ["n8n", "360dialog", "Google Sheets"],
+      "nodos_base": 7,
+      "precio_alquiler": { "implementacion": 150, "mensual": 30 },
+      "precio_compra": 320,
+      "gancho": "El seguimiento que nunca te olvidás de hacer, porque no lo hacés vos.",
+      "addons": [
+        { "nombre": "Secuencia extendida: agrega 5, 7 y 14 días", "nodos": 2, "costo": 30 },
+        { "nombre": "A/B testing: alterna entre 2 versiones de mensaje", "nodos": 3, "costo": 45 },
+        { "nombre": "Registro respuestas: marca en Sheets si respondió o no", "nodos": 1, "costo": 15 },
+        { "nombre": "Alerta fuera de horario", "nodos": 1, "costo": 15 }
+      ]
+    },
+    {
+      "id": "S04",
+      "nombre": "Publicación Automática de Contenido en Redes",
+      "categoria": "atencion_gestion",
+      "incluye": "Cargás el contenido en Sheets. Se genera texto con hashtags. Se entrega listo o se publica solo.",
+      "herramientas": ["n8n", "Google Sheets", "OpenAI", "Meta for Developers", "360dialog"],
+      "nodos_base": 8,
+      "precio_alquiler": { "implementacion": 160, "mensual": 30 },
+      "precio_compra": 340,
+      "gancho": "Cargás una fila en una planilla y el posteo sale solo.",
+      "addons": [
+        { "nombre": "Imagen IA: genera portada del posteo con IA (DALL-E)", "nodos": 3, "costo": 45 },
+        { "nombre": "3 variantes: genera 3 versiones del texto para elegir", "nodos": 2, "costo": 30 },
+        { "nombre": "Posteo automático: publica directo via API de Meta", "nodos": 3, "costo": 45 },
+        { "nombre": "Stories: genera copy para Stories además del feed", "nodos": 1, "costo": 15 }
+      ]
+    },
+    {
+      "id": "S05",
+      "nombre": "Respuesta Automática de Emails",
+      "categoria": "atencion_gestion",
+      "incluye": "Conectado a Gmail. Clasifica emails. Responde automáticamente los frecuentes. Redirige complejos al humano.",
+      "herramientas": ["n8n", "Gmail API", "OpenAI"],
+      "nodos_base": 8,
+      "precio_alquiler": { "implementacion": 140, "mensual": 30 },
+      "precio_compra": 300,
+      "gancho": "Tu casilla se ordena sola. Vos solo ves lo que realmente necesita tu firma.",
+      "addons": [
+        { "nombre": "IA dinámica: respuestas contextuales, no plantillas fijas", "nodos": 2, "costo": 30 },
+        { "nombre": "8 categorías: base incluye 3, este addon suma hasta 8", "nodos": 2, "costo": 30 },
+        { "nombre": "Multiidioma: responde en inglés si detecta idioma", "nodos": 1, "costo": 15 },
+        { "nombre": "Reporte semanal: emails respondidos vs. derivados", "nodos": 2, "costo": 30 }
+      ]
+    },
+    {
+      "id": "S06",
+      "nombre": "Agenda de Turnos por WhatsApp",
+      "categoria": "atencion_gestion",
+      "incluye": "El cliente elige día/hora por WPP. Se registra en Google Calendar. Confirmación y recordatorio 24hs antes.",
+      "herramientas": ["n8n", "360dialog", "Google Calendar API"],
+      "nodos_base": 8,
+      "precio_alquiler": { "implementacion": 160, "mensual": 35 },
+      "precio_compra": 360,
+      "gancho": "Se termina el ida y vuelta de mensajes para coordinar un horario.",
+      "addons": [
+        { "nombre": "Multi-agenda: maneja varios profesionales en paralelo", "nodos": 3, "costo": 45 },
+        { "nombre": "Cancelación/reprogramación por WPP", "nodos": 2, "costo": 30 },
+        { "nombre": "Email: recordatorio también por Gmail", "nodos": 1, "costo": 15 },
+        { "nombre": "Bloqueo automático según disponibilidad en Calendar", "nodos": 1, "costo": 15 }
+      ]
+    },
+    {
+      "id": "S07",
+      "nombre": "Resumen Diario de Novedades",
+      "categoria": "atencion_gestion",
+      "incluye": "Cada mañana el cliente recibe: turnos del día, leads nuevos, tareas pendientes, mensajes sin responder.",
+      "herramientas": ["n8n", "360dialog", "Google Calendar", "Google Sheets", "Gmail"],
+      "nodos_base": 6,
+      "precio_alquiler": { "implementacion": 120, "mensual": 20 },
+      "precio_compra": 250,
+      "gancho": "Abrís WhatsApp a la mañana y ya sabés cómo viene el día.",
+      "addons": [
+        { "nombre": "Emails del día: incluye resumen de Gmail", "nodos": 1, "costo": 15 },
+        { "nombre": "Gastos del mes: incluye estado financiero si tiene S08", "nodos": 1, "costo": 15 },
+        { "nombre": "Por email: envío también por Gmail además de WPP", "nodos": 1, "costo": 15 },
+        { "nombre": "Resumen semanal: los viernes además del diario", "nodos": 1, "costo": 15 }
+      ]
+    },
+    {
+      "id": "S08",
+      "nombre": "Registro de Gastos por WhatsApp",
+      "categoria": "atencion_gestion",
+      "incluye": "El cliente manda texto o audio por WPP. Se registra en Sheets con monto, categoría, fecha, descripción.",
+      "herramientas": ["n8n", "360dialog", "Google Sheets", "OpenAI (Whisper)"],
+      "nodos_base": 7,
+      "precio_alquiler": { "implementacion": 130, "mensual": 25 },
+      "precio_compra": 280,
+      "gancho": "Mandás un audio, 'pagué 15 lucas de nafta', y ya quedó cargado.",
+      "addons": [
+        { "nombre": "Dashboard: gráficos por categoría en Sheets", "nodos": 2, "costo": 30 },
+        { "nombre": "Reporte mensual: enviado automáticamente por WPP", "nodos": 2, "costo": 30 },
+        { "nombre": "Ingresos: registra también ingresos además de gastos", "nodos": 1, "costo": 15 },
+        { "nombre": "Alerta de umbral: avisa si un gasto supera límite", "nodos": 2, "costo": 30 }
+      ]
+    },
+    {
+      "id": "S09",
+      "nombre": "Notificaciones y Alertas Personalizadas",
+      "categoria": "atencion_gestion",
+      "incluye": "Alertas ante eventos definidos: cliente VIP escribió, lead sin respuesta, turnos, facturas vencidas.",
+      "herramientas": ["n8n", "Gmail", "Google Sheets", "Google Calendar", "360dialog"],
+      "nodos_base": 6,
+      "precio_alquiler": { "implementacion": 110, "mensual": 20 },
+      "precio_compra": 230,
+      "gancho": "Te avisa lo que importa, antes de que se te pase.",
+      "addons": [
+        { "nombre": "Hasta 10 reglas: base incluye 3, este addon suma a 10", "nodos": 3, "costo": 45 },
+        { "nombre": "Email: alertas también por Gmail además de WPP", "nodos": 1, "costo": 15 },
+        { "nombre": "Acción sugerida IA: alerta con qué hacer generado por GPT", "nodos": 2, "costo": 30 }
+      ]
+    },
+    {
+      "id": "S10",
+      "nombre": "FAQ Bot para Instagram DMs",
+      "categoria": "atencion_gestion",
+      "incluye": "Responde DMs frecuentes en Instagram. Deriva a WPP cuando la consulta es compleja.",
+      "herramientas": ["n8n", "Instagram Messaging API", "Meta for Developers", "360dialog"],
+      "nodos_base": 7,
+      "precio_alquiler": { "implementacion": 150, "mensual": 30 },
+      "precio_compra": 320,
+      "gancho": "Los DMs de Instagram dejan de acumularse sin responder.",
+      "addons": [
+        { "nombre": "IA dinámica: entiende el contexto del DM con GPT", "nodos": 2, "costo": 30 },
+        { "nombre": "Catálogo: integra con catálogo de productos de Instagram", "nodos": 2, "costo": 30 },
+        { "nombre": "Registro: guarda consultas frecuentes en Sheets", "nodos": 1, "costo": 15 }
+      ]
+    },
+    {
+      "id": "S11",
+      "nombre": "Generador Automático de Presupuestos",
+      "categoria": "atencion_gestion",
+      "incluye": "El cliente completa datos por WhatsApp o formulario. El sistema arma un presupuesto desde tu lista de precios en Sheets, genera PDF y lo envía.",
+      "herramientas": ["n8n", "Google Sheets", "OpenAI", "Google Docs", "Gmail", "360dialog"],
+      "nodos_base": 9,
+      "precio_alquiler": { "implementacion": 170, "mensual": 35 },
+      "precio_compra": 380,
+      "gancho": "El presupuesto sale solo, con tus precios, en el momento en que te lo piden.",
+      "addons": [
+        { "nombre": "Seguimiento automático si no responde en 48hs", "nodos": 2, "costo": 30 },
+        { "nombre": "Aceptación con un clic (checkbox de conformidad)", "nodos": 2, "costo": 30 },
+        { "nombre": "Multi-moneda: presupuesta en ARS y USD", "nodos": 1, "costo": 15 }
+      ]
+    },
+    {
+      "id": "S12",
+      "nombre": "Organizador Automático de Archivos en Drive",
+      "categoria": "atencion_gestion",
+      "incluye": "El cliente envía un archivo por WhatsApp o email. El sistema lo clasifica y lo guarda en la carpeta correcta de Drive. Confirma recepción.",
+      "herramientas": ["n8n", "Google Drive API", "360dialog o Gmail", "OpenAI"],
+      "nodos_base": 7,
+      "precio_alquiler": { "implementacion": 130, "mensual": 25 },
+      "precio_compra": 290,
+      "gancho": "Ya no se pierde ni se duplica ningún archivo en Drive.",
+      "addons": [
+        { "nombre": "Renombrado automático con convención de nombres", "nodos": 1, "costo": 15 },
+        { "nombre": "Notificación al equipo cuando llega un archivo importante", "nodos": 1, "costo": 15 },
+        { "nombre": "OCR de PDFs escaneados (los vuelve buscables)", "nodos": 3, "costo": 45 }
+      ]
+    },
+    {
+      "id": "S13",
+      "nombre": "Encuesta de Satisfacción Post-Servicio",
+      "categoria": "atencion_gestion",
+      "incluye": "Al cerrar un turno o servicio, se dispara una encuesta corta por WhatsApp. Guarda respuestas en Sheets. Alerta si la nota es baja.",
+      "herramientas": ["n8n", "360dialog", "Google Sheets", "Google Calendar (opcional)"],
+      "nodos_base": 6,
+      "precio_alquiler": { "implementacion": 110, "mensual": 20 },
+      "precio_compra": 240,
+      "gancho": "Sabés cómo quedó el cliente sin tener que preguntarle vos.",
+      "addons": [
+        { "nombre": "Pedido de reseña en Google si la nota es alta", "nodos": 2, "costo": 30 },
+        { "nombre": "Resumen mensual de satisfacción", "nodos": 1, "costo": 15 }
+      ]
+    },
+    {
+      "id": "S14",
+      "nombre": "Análisis Comparativo de Mercado (ACM) Automatizado",
+      "categoria": "vertical_inmobiliaria",
+      "incluye": "El asesor carga datos en Sheets. n8n scrapea Zonaprop/Argenprop/MercadoLibre. IA analiza y genera informe PDF con valuación.",
+      "herramientas": ["n8n", "Google Sheets", "Apify", "OpenAI", "Google Docs", "Gmail", "360dialog"],
+      "nodos_base": 10,
+      "precio_alquiler": { "implementacion": 280, "mensual": 60 },
+      "precio_compra": 650,
+      "gancho": "Tasás una propiedad con datos reales del mercado en minutos, no en horas.",
+      "addons": [
+        { "nombre": "Properati: agrega ese portal al scraping", "nodos": 2, "costo": 30 },
+        { "nombre": "Histórico: evolución $/m² en la zona", "nodos": 4, "costo": 60 },
+        { "nombre": "Slides: informe en Google Slides presentable", "nodos": 2, "costo": 30 },
+        { "nombre": "Email automático: envía el informe por Gmail", "nodos": 1, "costo": 15 }
+      ]
+    }
+  ],
+  "combos": [
+    { "id": "C01", "nombre": "🎯 Atención Total", "servicios": ["S01", "S02", "S03"], "ideal_para": "Cualquier negocio que no quiere perder ni una consulta y quiere hacer seguimiento sin esfuerzo manual.", "nodos_est": 24, "precio_alquiler": { "implementacion": 380, "mensual": 85 }, "precio_compra": 850, "ahorro": "~u$s 100 impl. / ~u$s 20/mes" },
+    { "id": "C02", "nombre": "⚙️ Operación Automatizada", "servicios": ["S01", "S02", "S03", "S04", "S07"], "ideal_para": "Negocios que quieren automatizar toda la operación.", "nodos_est": 38, "precio_alquiler": { "implementacion": 580, "mensual": 130 }, "precio_compra": 1300, "ahorro": "~u$s 150 impl. / ~u$s 40/mes" },
+    { "id": "C03", "nombre": "🏠 Vertical Inmobiliaria: Operación + Tasación", "servicios": ["S01", "S02", "S03", "S04", "S14", "S07"], "ideal_para": "El combo más completo para inmobiliarias. Suma tasación automática.", "nodos_est": 48, "precio_alquiler": { "implementacion": 780, "mensual": 170 }, "precio_compra": 1750, "ahorro": "~u$s 200 impl. / ~u$s 60/mes" },
+    { "id": "C04", "nombre": "🙋 Asistente Personal", "servicios": ["S05", "S06", "S07", "S09"], "ideal_para": "Profesionales independientes: contadores, abogados, coaches, médicos.", "nodos_est": 28, "precio_alquiler": { "implementacion": 420, "mensual": 85 }, "precio_compra": 950, "ahorro": "~u$s 110 impl. / ~u$s 20/mes" },
+    { "id": "C05", "nombre": "💼 Negocio Completo", "servicios": ["S05", "S06", "S07", "S08", "S09"], "ideal_para": "Dueños de pequeños negocios o autónomos.", "nodos_est": 35, "precio_alquiler": { "implementacion": 520, "mensual": 100 }, "precio_compra": 1150, "ahorro": "~u$s 130 impl. / ~u$s 30/mes" },
+    { "id": "C06", "nombre": "🚀 Presencia Digital", "servicios": ["S04", "S05", "S10"], "ideal_para": "Negocios o profesionales que quieren automatizar su comunicación digital.", "nodos_est": 23, "precio_alquiler": { "implementacion": 370, "mensual": 75 }, "precio_compra": 820, "ahorro": "~u$s 85 impl. / ~u$s 15/mes" },
+    { "id": "C07", "nombre": "🧾 Cotización Express", "servicios": ["S11", "S01", "S03"], "ideal_para": "Negocios de servicios que cotizan seguido: talleres, estudios, contratistas.", "nodos_est": 24, "precio_alquiler": { "implementacion": 380, "mensual": 80 }, "precio_compra": 850, "ahorro": "~u$s 90 impl. / ~u$s 20/mes" }
+  ],
+  "servicios_web": [
+    { "id": "W01", "nombre": "Landing Page (sin base de datos)", "incluye": "Página de una sola sección con scroll, diseño a medida, responsive, formulario de contacto/WhatsApp, dominio propio, SSL, SEO técnico básico.", "stack": ["Claude Code", "Firebase Hosting", "dominio .com", "SSL"], "tiempo": "5 a 10 días", "rango_mercado": "u$s 295 – 570", "valor_sugerido": "u$s 200 – 250", "addons": ["Copywriting orientado a conversión", "Animaciones (scroll/parallax)", "Versión bilingüe (ES/EN)", "Integración con WhatsApp Business"] },
+    { "id": "W02", "nombre": "Sitio Web con Base de Datos", "incluye": "Sitio multi-sección o multipágina con backend en Firebase, formularios que guardan datos, catálogo dinámico, panel simple si aplica.", "stack": ["Claude Code", "Firebase Hosting + Firestore", "Firebase Auth (si aplica)", "dominio .com", "SSL"], "tiempo": "15 a 25 días", "rango_mercado": "u$s 600 – 905", "valor_sugerido": "u$s 450 – 550", "addons": ["Panel de administración simple", "Autenticación de usuarios", "Integración con WhatsApp/Sheets", "Catálogo con búsqueda/filtros"], "nota": "E-commerce con checkout/pagos se cotiza aparte." }
+  ],
+  "personalizados": {
+    "formula": "precio = base_del_nivel + (nodos_extra * 15)",
+    "niveles": [
+      { "nivel": "Simple", "descripcion": "Un solo flujo lineal. Una función principal. APIs simples: Gmail, Sheets, Calendar, WPP. Sin scraping ni IA compleja.", "nodos_incluidos": 8, "precio_base": 200, "redi_cotiza": true },
+      { "nivel": "Medio", "descripcion": "Varios flujos conectados. Lógica condicional. 2 a 4 integraciones. Puede incluir IA básica.", "nodos_incluidos": 18, "precio_base": 450, "redi_cotiza": true },
+      { "nivel": "Complejo", "descripcion": "Múltiples flujos interdependientes. Lógica avanzada. Scraping, IA integrada, 4+ APIs. Puede incluir CRM simple.", "nodos_incluidos": 30, "precio_base": 800, "redi_cotiza": true },
+      { "nivel": "Complejo+", "descripcion": "Sistemas completos multi-flujo. Integraciones CRMs externos (HubSpot, Salesforce). >30 nodos.", "nodos_incluidos": null, "precio_base": null, "redi_cotiza": false, "accion": "Derivar a Luca (cotización manual)" }
+    ]
+  },
+  "modelo_negocio": {
+    "alquiler": "Impl. reducida + cuota mensual. Cliente no paga → flujo se desactiva. Luca mantiene el .json. Genera MRR.",
+    "compra": "Precio único mayor. Si cliente cancela mantenimiento → recibe el .json y se va. Genera ticket alto.",
+    "personalizado": "Precio base por nivel + u$s 15 por nodo extra. Complejo+ (>30 nodos) → cotización manual.",
+    "servicios_web": "Pago único por desarrollo. Mantenimiento y hosting Firebase se cotizan aparte."
+  }
+}
