@@ -20,14 +20,21 @@
 | Responder WhatsApp (texto + audio) | ✅ | `n8n/redi-cerebro.json` |
 | Responder Instagram DMs | ✅ | `n8n/redi-cerebro.json` |
 | Responder emails (Gmail) | ✅ | `n8n/redi-cerebro.json` |
-| Cotizar servicios/combos/web leyendo el Sheet en tiempo real | ✅ | `brain/` + tool `Consultar_Catalogo` |
+| **Descubrimiento**: pregunta antes de cotizar y recomienda lo mínimo que sirve | ✅ | `brain/redi-system-prompt.md` |
+| Cotizar servicios/combos/web leyendo el Sheet en tiempo real | ✅ | tool `Consultar_Catalogo` |
+| **Tiempo de entrega** estimado según proyectos en curso | ✅ | tools `Ver_Proyectos_En_Curso` + `Calcular_Entrega` |
+| Pilotear el *"no me alcanza"* y recotizar de cero | ✅ | `brain/redi-system-prompt.md` |
+| **Seña 50%** por transferencia (solo si rechaza la llamada) | ✅ | `config_operativa.sena` |
+| Detectar **urgencia** → prioriza y adelanta la llamada | ✅ | tools `Guardar_Lead` + `Derivar_a_Humano` |
+| Responder FAQ desde **Base de Conocimiento** en el Sheet | ✅ | tool `Consultar_BaseConocimiento` |
 | Captar y guardar leads | ✅ | tool `Guardar_Lead` |
 | Agendar llamadas con Luca (Google Calendar) | ✅ | tool `Agendar_Llamada` |
 | Registrar clientes cerrados en Sheets | ✅ | tool `Registrar_Cliente` |
 | Pasar a humano cuando lo piden | ✅ | tool `Derivar_a_Humano` |
-| Seguimiento a leads fríos + encuesta de satisfacción | ✅ | `n8n/redi-seguimiento.json` |
-| Reporte semanal con métricas + consejos IA | ✅ | `n8n/redi-reporte-semanal.json` |
-| Panel web propio de Redi | 🔜 Etapa 2 | `panel/` (próximo) |
+| Seguimiento a leads fríos (**A/B testing**) + satisfacción | ✅ | `n8n/redi-seguimiento.json` |
+| Reporte semanal con métricas + **posts de Meta** + consejos IA | ✅ | `n8n/redi-reporte-semanal.json` |
+| Disciplina de costos (temp 0.3, tokens y memoria acotados) | ✅ | `n8n/redi-cerebro.json` |
+| Panel web propio de Redi + **chat con Redi** | 🔜 Etapa 2 | `panel/` (próximo) |
 
 ---
 

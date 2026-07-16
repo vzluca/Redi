@@ -3,23 +3,19 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## 🧠 REDI — CEREBRO\nAsistente de RedLabs. Atiende WhatsApp, Instagram y Email.\nTranscribe audios (Whisper), cotiza desde el Sheet, agenda llamadas,\nguarda leads y deriva a Luca cuando hace falta.\n\n**Antes de activar:** cargá credenciales en cada nodo y pegá el System\nPrompt de `brain/redi-system-prompt.md` en el nodo 'Redi (AI Agent)'.",
-        "height": 260,
-        "width": 420,
+        "content": "## 🧠 REDI — CEREBRO\nAtiende WhatsApp, Instagram y Email. Descubre qué necesita el cliente,\ncotiza desde el Sheet, estima la entrega, agenda llamadas, guarda leads\ny deriva a Luca.\n\n**Antes de activar:**\n1. Pegá `brain/redi-system-prompt.md` en 'Redi (AI Agent)'.\n2. Cargá credenciales y reemplazá los `PEGAR_...`.\n3. Config de IA ya optimizada (temp 0.3, tokens acotados, memoria 12).",
+        "height": 280,
+        "width": 440,
         "color": 4
       },
       "id": "note-header",
       "name": "Nota — Cómo usar",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-460, -320]
+      "position": [-460, -360]
     },
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "redi-whatsapp",
-        "options": {}
-      },
+      "parameters": { "httpMethod": "POST", "path": "redi-whatsapp", "options": {} },
       "id": "wh-wpp",
       "name": "WhatsApp In (360dialog)",
       "type": "n8n-nodes-base.webhook",
@@ -28,11 +24,7 @@
       "webhookId": "redi-whatsapp"
     },
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "redi-instagram",
-        "options": {}
-      },
+      "parameters": { "httpMethod": "POST", "path": "redi-instagram", "options": {} },
       "id": "wh-ig",
       "name": "Instagram In (Meta)",
       "type": "n8n-nodes-base.webhook",
@@ -41,12 +33,7 @@
       "webhookId": "redi-instagram"
     },
     {
-      "parameters": {
-        "pollTimes": { "item": [ { "mode": "everyMinute" } ] },
-        "simple": false,
-        "filters": {},
-        "options": {}
-      },
+      "parameters": { "pollTimes": { "item": [ { "mode": "everyMinute" } ] }, "simple": false, "filters": {}, "options": {} },
       "id": "tr-gmail",
       "name": "Email In (Gmail)",
       "type": "n8n-nodes-base.gmailTrigger",
@@ -55,7 +42,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Normaliza el payload de 360dialog a un formato común para Redi\nconst body = $json.body || $json;\nconst msg = body?.messages?.[0] || {};\nconst contact = body?.contacts?.[0] || {};\nlet type = 'text';\nlet text = msg?.text?.body || '';\nlet mediaId = '';\nif (msg.type === 'audio' || msg.voice) { type = 'audio'; mediaId = msg?.audio?.id || msg?.voice?.id || ''; }\nelse if (msg.type === 'image') { type = 'image'; mediaId = msg?.image?.id || ''; text = msg?.image?.caption || ''; }\nreturn [{ json: {\n  channel: 'whatsapp',\n  from: msg.from || contact?.wa_id || '',\n  name: contact?.profile?.name || 'Cliente',\n  type,\n  text,\n  mediaId,\n  sessionId: 'wpp_' + (msg.from || contact?.wa_id || 'anon')\n}}];"
+        "jsCode": "// Normaliza el payload de 360dialog a un formato común para Redi\nconst body = $json.body || $json;\nconst msg = body?.messages?.[0] || {};\nconst contact = body?.contacts?.[0] || {};\nlet type = 'text';\nlet text = msg?.text?.body || '';\nlet mediaId = '';\nif (msg.type === 'audio' || msg.voice) { type = 'audio'; mediaId = msg?.audio?.id || msg?.voice?.id || ''; }\nelse if (msg.type === 'image') { type = 'image'; mediaId = msg?.image?.id || ''; text = msg?.image?.caption || ''; }\nreturn [{ json: {\n  channel: 'whatsapp',\n  from: msg.from || contact?.wa_id || '',\n  name: contact?.profile?.name || 'Cliente',\n  type, text, mediaId,\n  sessionId: 'wpp_' + (msg.from || contact?.wa_id || 'anon')\n}}];"
       },
       "id": "norm-wpp",
       "name": "Normalizar WhatsApp",
@@ -65,7 +52,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Normaliza el payload de Instagram Messaging (Meta) a formato común\nconst entry = ($json.body?.entry || $json.entry || [])[0] || {};\nconst messaging = (entry.messaging || [])[0] || {};\nconst senderId = messaging?.sender?.id || '';\nconst text = messaging?.message?.text || '';\nconst att = messaging?.message?.attachments?.[0];\nlet type = 'text'; let mediaUrl = '';\nif (att?.type === 'audio') { type = 'audio'; mediaUrl = att?.payload?.url || ''; }\nelse if (att?.type === 'image') { type = 'image'; mediaUrl = att?.payload?.url || ''; }\nreturn [{ json: {\n  channel: 'instagram',\n  from: senderId,\n  name: 'Seguidor IG',\n  type,\n  text,\n  mediaUrl,\n  sessionId: 'ig_' + senderId\n}}];"
+        "jsCode": "// Normaliza el payload de Instagram Messaging (Meta) a formato común\nconst entry = ($json.body?.entry || $json.entry || [])[0] || {};\nconst messaging = (entry.messaging || [])[0] || {};\nconst senderId = messaging?.sender?.id || '';\nconst text = messaging?.message?.text || '';\nconst att = messaging?.message?.attachments?.[0];\nlet type = 'text'; let mediaUrl = '';\nif (att?.type === 'audio') { type = 'audio'; mediaUrl = att?.payload?.url || ''; }\nelse if (att?.type === 'image') { type = 'image'; mediaUrl = att?.payload?.url || ''; }\nreturn [{ json: {\n  channel: 'instagram',\n  from: senderId,\n  name: 'Seguidor IG',\n  type, text, mediaUrl,\n  sessionId: 'ig_' + senderId\n}}];"
       },
       "id": "norm-ig",
       "name": "Normalizar Instagram",
@@ -75,7 +62,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Normaliza un email de Gmail a formato común\nconst from = $json.from?.value?.[0]?.address || $json.from || '';\nconst name = $json.from?.value?.[0]?.name || 'Contacto';\nconst text = ($json.subject ? 'Asunto: ' + $json.subject + '\\n\\n' : '') + ($json.textPlain || $json.snippet || '');\nreturn [{ json: {\n  channel: 'email',\n  from,\n  name,\n  type: 'text',\n  text,\n  threadId: $json.threadId || '',\n  sessionId: 'mail_' + from\n}}];"
+        "jsCode": "// Normaliza un email de Gmail a formato común\nconst from = $json.from?.value?.[0]?.address || $json.from || '';\nconst name = $json.from?.value?.[0]?.name || 'Contacto';\nconst text = ($json.subject ? 'Asunto: ' + $json.subject + '\\n\\n' : '') + ($json.textPlain || $json.snippet || '');\nreturn [{ json: {\n  channel: 'email',\n  from, name,\n  type: 'text', text,\n  threadId: $json.threadId || '',\n  sessionId: 'mail_' + from\n}}];"
       },
       "id": "norm-mail",
       "name": "Normalizar Email",
@@ -87,9 +74,7 @@
       "parameters": {
         "conditions": {
           "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [
-            { "id": "c1", "leftValue": "={{ $json.type }}", "rightValue": "audio", "operator": { "type": "string", "operation": "equals" } }
-          ],
+          "conditions": [ { "id": "c1", "leftValue": "={{ $json.type }}", "rightValue": "audio", "operator": { "type": "string", "operation": "equals" } } ],
           "combinator": "and"
         },
         "options": {}
@@ -101,24 +86,15 @@
       "position": [120, 120]
     },
     {
-      "parameters": {
-        "resource": "audio",
-        "operation": "transcribe",
-        "options": { "language": "es" }
-      },
+      "parameters": { "resource": "audio", "operation": "transcribe", "options": { "language": "es" } },
       "id": "whisper",
       "name": "Transcribir Audio (Whisper)",
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [360, 0],
-      "credentials": {}
+      "position": [360, 0]
     },
     {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
+      "parameters": { "mode": "combine", "combineBy": "combineAll", "options": {} },
       "id": "merge-in",
       "name": "Unificar entrada",
       "type": "n8n-nodes-base.merge",
@@ -130,7 +106,8 @@
         "promptType": "define",
         "text": "={{ $json.text }}",
         "options": {
-          "systemMessage": "PEGAR ACÁ el contenido de brain/redi-system-prompt.md. Redi es el asistente de RedLabs: cotiza desde el Sheet, agenda llamadas con Luca, guarda leads y deriva a humano cuando corresponde. Nunca usa términos técnicos (nada de 'nodos'/'API'), siempre muestra el desglose de precios y lee los precios en tiempo real con la tool Consultar_Catalogo."
+          "systemMessage": "PEGAR ACÁ el contenido completo de brain/redi-system-prompt.md. (Redi: descubre qué necesita el cliente con preguntas, recomienda lo mínimo que sirve, cotiza desde el Sheet con desglose y tiempo de entrega, ofrece llamada con Luca y recién si la rechazan pasa la seña 50% por transferencia. Nunca dice 'nodos'. Sé conciso y no llames tools de más.)",
+          "maxIterations": 6
         }
       },
       "id": "agent",
@@ -142,30 +119,26 @@
     {
       "parameters": {
         "model": { "__rl": true, "mode": "list", "value": "gpt-4o" },
-        "options": { "temperature": 0.4 }
+        "options": { "temperature": 0.3, "maxTokens": 500 }
       },
       "id": "llm",
-      "name": "GPT-4o",
+      "name": "GPT-4o (temp 0.3, 500 tok)",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
-      "position": [720, 360]
+      "position": [700, 360]
     },
     {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $json.sessionId }}",
-        "contextWindowLength": 20
-      },
+      "parameters": { "sessionIdType": "customKey", "sessionKey": "={{ $json.sessionId }}", "contextWindowLength": 12 },
       "id": "memory",
-      "name": "Memoria por contacto",
+      "name": "Memoria por contacto (12)",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
-      "position": [860, 360]
+      "position": [840, 360]
     },
     {
       "parameters": {
         "descriptionType": "manual",
-        "toolDescription": "Lee servicios, addons, combos, servicios web y niveles personalizados con sus precios. USAR SIEMPRE antes de dar un precio. Pasá el nombre o palabra clave del servicio en el filtro.",
+        "toolDescription": "Lee servicios, addons, combos, servicios web y niveles personalizados con sus precios. USAR SIEMPRE antes de dar un precio. Pasá el nombre o palabra clave del servicio.",
         "operation": "getAll",
         "sheetName": { "__rl": true, "mode": "list", "value": "Catálogo Servicios" },
         "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
@@ -176,12 +149,57 @@
       "name": "Consultar_Catalogo",
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.5,
-      "position": [1000, 360]
+      "position": [960, 360]
     },
     {
       "parameters": {
         "descriptionType": "manual",
-        "toolDescription": "Guarda un lead nuevo en la hoja 'Leads'. Campos: fecha, nombre, contacto, canal, interes, resumen, score.",
+        "toolDescription": "Responde preguntas frecuentes leyendo la hoja 'Base Conocimiento' (columnas: pregunta, respuesta, categoria). Usar para dudas típicas sobre RedLabs, proceso, formas de pago, etc.",
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Base Conocimiento" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "tool-kb",
+      "name": "Consultar_BaseConocimiento",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [1080, 360]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Devuelve los proyectos que Luca tiene 'En curso' en la hoja 'Clientes Activos'. Usar para contar cuántos hay en curso y estimar el tiempo de entrega.",
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Clientes Activos" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "filtersUI": { "values": [ { "lookupColumn": "estado", "lookupValue": "En curso" } ] },
+        "options": {}
+      },
+      "id": "tool-wip",
+      "name": "Ver_Proyectos_En_Curso",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [1200, 360]
+    },
+    {
+      "parameters": {
+        "name": "Calcular_Entrega",
+        "description": "Estima el tiempo de entrega en días hábiles. Pasá un JSON string: {\"dias_base\": N, \"en_curso\": M}. 'dias_base' sale de config_operativa.tiempos_entrega del catálogo; 'en_curso' es la cantidad de proyectos que Luca ya tiene en curso (usar Ver_Proyectos_En_Curso). Devuelve un rango tipo 'X a Y días hábiles'.",
+        "jsCode": "// Modelo 'reparto parejo': con K proyectos a la vez, cada uno tarda dias_base*K.\n// Capacidad 2 en paralelo; si está llena, el nuevo espera en cola. Ajustar con Luca.\nlet p; try { p = JSON.parse(query); } catch (e) { p = {}; }\nconst diasBase = Number(p.dias_base) || 5;\nconst enCurso = Number(p.en_curso) || 0;\nconst capacidad = 2;   // proyectos en paralelo\nconst buffer = 2;      // holgura en días\nconst rangoPct = 0.2;  // ancho del rango\nlet dias;\nif (enCurso < capacidad) {\n  const simultaneos = Math.min(enCurso + 1, capacidad);\n  dias = diasBase * simultaneos;\n} else {\n  const esperaCola = diasBase; // ~una tanda para que se libere un lugar\n  dias = esperaCola + diasBase * capacidad;\n}\ndias += buffer;\nconst min = dias;\nconst max = Math.ceil(dias * (1 + rangoPct));\nreturn `${min} a ${max} días hábiles`;"
+      },
+      "id": "tool-entrega",
+      "name": "Calcular_Entrega",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [1320, 360]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Guarda un lead en la hoja 'Leads'. Campos: nombre, contacto, canal, interes, resumen, score (1-10), prioridad (alta/normal).",
         "operation": "append",
         "sheetName": { "__rl": true, "mode": "list", "value": "Leads" },
         "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
@@ -194,7 +212,9 @@
             "canal": "={{ $fromAI('canal') }}",
             "interes": "={{ $fromAI('interes') }}",
             "resumen": "={{ $fromAI('resumen') }}",
-            "score": "={{ $fromAI('score') }}"
+            "score": "={{ $fromAI('score') }}",
+            "prioridad": "={{ $fromAI('prioridad') }}",
+            "estado": "Nuevo"
           }
         },
         "options": {}
@@ -203,7 +223,7 @@
       "name": "Guardar_Lead",
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.5,
-      "position": [1140, 360]
+      "position": [1440, 360]
     },
     {
       "parameters": {
@@ -222,12 +242,12 @@
       "name": "Agendar_Llamada",
       "type": "n8n-nodes-base.googleCalendarTool",
       "typeVersion": 1.3,
-      "position": [1280, 360]
+      "position": [1560, 360]
     },
     {
       "parameters": {
         "descriptionType": "manual",
-        "toolDescription": "Registra un cliente cerrado en la hoja 'Clientes Activos'. Usar cuando se confirma una venta.",
+        "toolDescription": "Registra un cliente cerrado en 'Clientes Activos'. Usar al confirmar la venta. Poné estado 'En curso' si Luca ya arranca.",
         "operation": "append",
         "sheetName": { "__rl": true, "mode": "list", "value": "Clientes Activos" },
         "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
@@ -241,7 +261,7 @@
             "precio_impl": "={{ $fromAI('precio_impl') }}",
             "cuota_mensual": "={{ $fromAI('cuota_mensual') }}",
             "fecha_inicio": "={{ $now.toISODate() }}",
-            "estado": "Nuevo"
+            "estado": "En curso"
           }
         },
         "options": {}
@@ -250,11 +270,11 @@
       "name": "Registrar_Cliente",
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.5,
-      "position": [1420, 360]
+      "position": [1680, 360]
     },
     {
       "parameters": {
-        "toolDescription": "Deriva la conversación a Luca (humano). Usar cuando el cliente pide hablar con una persona, se frustra, o el proyecto es Complejo+. Enviar motivo y resumen.",
+        "toolDescription": "Deriva a Luca (humano) o le avisa de un lead prioritario/urgente. Usar cuando el cliente pide una persona, se frustra, el proyecto es Complejo+, o hay urgencia. Enviar motivo y resumen.",
         "method": "POST",
         "url": "https://waba-v2.360dialog.io/messages",
         "sendHeaders": true,
@@ -268,7 +288,7 @@
       "name": "Derivar_a_Humano",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.2,
-      "position": [1560, 360]
+      "position": [1800, 360]
     },
     {
       "parameters": {
@@ -346,9 +366,12 @@
     "¿Es audio?": { "main": [ [ { "node": "Transcribir Audio (Whisper)", "type": "main", "index": 0 } ], [ { "node": "Unificar entrada", "type": "main", "index": 1 } ] ] },
     "Transcribir Audio (Whisper)": { "main": [ [ { "node": "Unificar entrada", "type": "main", "index": 0 } ] ] },
     "Unificar entrada": { "main": [ [ { "node": "Redi (AI Agent)", "type": "main", "index": 0 } ] ] },
-    "GPT-4o": { "ai_languageModel": [ [ { "node": "Redi (AI Agent)", "type": "ai_languageModel", "index": 0 } ] ] },
-    "Memoria por contacto": { "ai_memory": [ [ { "node": "Redi (AI Agent)", "type": "ai_memory", "index": 0 } ] ] },
+    "GPT-4o (temp 0.3, 500 tok)": { "ai_languageModel": [ [ { "node": "Redi (AI Agent)", "type": "ai_languageModel", "index": 0 } ] ] },
+    "Memoria por contacto (12)": { "ai_memory": [ [ { "node": "Redi (AI Agent)", "type": "ai_memory", "index": 0 } ] ] },
     "Consultar_Catalogo": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Consultar_BaseConocimiento": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Ver_Proyectos_En_Curso": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
+    "Calcular_Entrega": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Guardar_Lead": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Agendar_Llamada": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },
     "Registrar_Cliente": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },

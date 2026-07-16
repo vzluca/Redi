@@ -274,5 +274,48 @@
     "compra": "Precio único mayor. Si cliente cancela mantenimiento → recibe el .json y se va. Genera ticket alto.",
     "personalizado": "Precio base por nivel + u$s 15 por nodo extra. Complejo+ (>30 nodos) → cotización manual.",
     "servicios_web": "Pago único por desarrollo. Mantenimiento y hosting Firebase se cotizan aparte."
+  },
+  "config_operativa": {
+    "tiempos_entrega": {
+      "unidad": "dias_habiles",
+      "nota": "dias_base = tiempo si Luca lo hiciera solo, sin nada más en curso. El tiempo real se estira según cuántos proyectos haya en curso (ver formula). AJUSTAR estos números con Luca.",
+      "base_por_servicio": {
+        "S01": 3, "S02": 4, "S03": 3, "S04": 3, "S05": 3, "S06": 4, "S07": 2,
+        "S08": 3, "S09": 2, "S10": 3, "S11": 4, "S12": 3, "S13": 2, "S14": 7,
+        "W01": 7, "W02": 20
+      },
+      "base_por_combo": { "C01": 6, "C02": 10, "C03": 14, "C04": 8, "C05": 10, "C06": 6, "C07": 6 },
+      "formula": {
+        "capacidad_paralela": 2,
+        "modelo": "reparto_parejo",
+        "descripcion": "Con K proyectos compartiendo el tiempo de Luca (incluido el nuevo), cada uno tarda dias_base * K. Ej: 5 días solo, con 2 en simultáneo = 10 días. Si ya hay 'capacidad_paralela' proyectos en curso, el nuevo espera en cola.",
+        "buffer_dias": 2,
+        "rango_pct": 0.2
+      }
+    },
+    "sena": {
+      "porcentaje": 50,
+      "medio": "transferencia",
+      "instruccion": "NO usar Mercado Pago (Luca no paga monotributo). Pasar SOLO cuando el cliente rechaza la llamada. Reemplazar por el alias/CVU o link de transferencia de Luca.",
+      "datos_transferencia": "PEGAR_ALIAS_O_LINK_DE_TRANSFERENCIA"
+    },
+    "urgencia": {
+      "frases": ["lo necesito ya", "lo antes posible", "urgente", "para ayer", "cuanto antes", "rápido", "rapido"],
+      "accion": "Marcar lead como PRIORITARIO, adelantar la oferta de llamada con Luca y avisarle a Luca."
+    },
+    "base_conocimiento": {
+      "hoja": "Base Conocimiento",
+      "columnas": ["pregunta", "respuesta", "categoria"],
+      "nota": "Redi responde FAQ leyendo esta hoja del mismo Sheet. Cargá acá las preguntas típicas."
+    },
+    "ia": {
+      "modelo_conversacion": "gpt-4o",
+      "modelo_tareas_internas": "gpt-4o-mini",
+      "temperature": 0.3,
+      "max_tokens_respuesta": 500,
+      "memoria_mensajes": 12,
+      "max_iteraciones_agente": 6,
+      "nota": "Config para no malgastar tokens: temperatura baja, respuestas acotadas, memoria corta y tope de iteraciones. Para mucho volumen, se puede pasar el agente a gpt-4o-mini."
+    }
   }
 }
