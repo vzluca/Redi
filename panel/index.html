@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
 <title>Redi — Panel de RedLabs</title>
+<link rel="icon" href="logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Tomorrow:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ============ TOKENS (sistema de marca RedLabs) ============ */
 :root{
-  /* dark = primario. Ink como fondo, Warm White como texto, Red como acento. */
   --bg:#050403; --bg-2:#0B0A09; --surface:#111110; --surface-2:#1A1917; --surface-3:#232120;
   --border:#242220; --border-2:#312E2C;
   --text:#F7F5F2; --muted:#A8A29B; --faint:#6E6862;
@@ -37,36 +38,26 @@
   --shadow-sm:0 1px 2px rgba(5,4,3,.06);
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%}
-body{
-  background:var(--bg); color:var(--text); font-family:var(--sans);
-  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 ::selection{background:var(--accent); color:#fff}
-/* números en Tomorrow */
 .tnum{font-family:var(--num); font-variant-numeric:tabular-nums; letter-spacing:.01em}
-/* labels / metadata en monospace */
 .mono{font-family:var(--mono)}
 
-/* ============ APP SHELL ============ */
-.app{display:grid; grid-template-columns:240px 1fr; min-height:100vh}
-
-/* ---- Sidebar ---- */
-.side{background:var(--bg-2); display:flex; flex-direction:column; position:sticky; top:0; height:100vh; box-shadow:var(--shadow-sm)}
+/* ============ APP SHELL (alto de pantalla) ============ */
+.app{display:grid; grid-template-columns:240px 1fr; height:100vh}
+.side{background:var(--bg-2); display:flex; flex-direction:column; height:100vh; box-shadow:var(--shadow-sm); min-height:0}
 .brand{display:flex; align-items:center; gap:12px; padding:22px 20px 20px}
-.brand .mark{width:30px; height:30px; flex:none; display:block}
-.brand .mark svg{width:100%; height:100%; display:block}
+.brand .mark{width:32px; height:32px; flex:none; display:grid; place-items:center}
+.brand .mark img,.brand .mark svg{width:100%; height:100%; object-fit:contain; display:block}
 .brand .wm{font-weight:700; letter-spacing:-.02em; font-size:17px; line-height:1}
 .brand .sub{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.12em; color:var(--faint); margin-top:5px}
-.nav{padding:6px 12px; display:flex; flex-direction:column; gap:1px; overflow-y:auto}
+.nav{padding:6px 12px; display:flex; flex-direction:column; gap:1px; overflow-y:auto; min-height:0}
 .nav .lbl{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.14em; color:var(--faint); padding:16px 8px 7px}
-.nav a{
-  display:flex; align-items:center; gap:11px; padding:9px 10px 9px 20px; border-radius:var(--radius-sm);
-  color:var(--muted); font-weight:500; font-size:13.5px; cursor:pointer; position:relative;
-}
+.nav a{display:flex; align-items:center; gap:11px; padding:9px 10px 9px 20px; border-radius:var(--radius-sm); color:var(--muted); font-weight:500; font-size:13.5px; cursor:pointer; position:relative}
 .nav a:hover{background:var(--surface-2); color:var(--text)}
 .nav a.active{background:var(--surface-2); color:var(--text)}
 .nav a.active::before{content:"<"; position:absolute; left:6px; font-family:var(--mono); font-weight:700; color:var(--accent); font-size:13px}
@@ -77,29 +68,32 @@ button{font-family:inherit}
 .side .foot .dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px var(--good-soft)}
 .side .foot small{font-family:var(--mono); color:var(--faint); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em}
 
-/* ---- Main ---- */
-.main{display:flex; flex-direction:column; min-width:0}
-.topbar{display:flex; align-items:center; gap:16px; padding:16px 28px; position:sticky; top:0; z-index:5;
-  background:color-mix(in srgb,var(--bg) 86%,transparent); backdrop-filter:blur(10px); box-shadow:0 1px 0 var(--border)}
+.main{display:flex; flex-direction:column; height:100vh; min-width:0; min-height:0}
+.topbar{display:flex; align-items:center; gap:16px; padding:16px 28px; box-shadow:0 1px 0 var(--border); flex:none}
 .topbar h1{font-size:20px; font-weight:650; letter-spacing:-.02em; margin:0; text-wrap:balance}
 .topbar .crumb{font-family:var(--mono); color:var(--faint); font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin-top:3px}
 .topbar .spacer{flex:1}
 .iconbtn{width:36px; height:36px; border-radius:var(--radius-sm); background:var(--surface-2); color:var(--muted); display:grid; place-items:center; cursor:pointer; border:0}
 .iconbtn:hover{color:var(--text); background:var(--surface-3)}
 .iconbtn svg{width:17px;height:17px}
-.content{padding:26px 28px 60px; max-width:1200px; width:100%}
+.content{flex:1; min-height:0; overflow:hidden; padding:22px 28px; display:flex; flex-direction:column}
+
+/* ============ LAYOUT HELPERS (fill a la pantalla) ============ */
+.dash{display:flex; flex-direction:column; gap:16px; height:100%; min-height:0}
+.dash.scroll{overflow:auto}
+.fillgrid{flex:1; min-height:0; display:grid; gap:16px}
+.grow{flex:1; min-height:0}
+.card.col{display:flex; flex-direction:column; min-height:0; overflow:hidden}
+.card.col>.section-title{flex:none}
+.scroll{overflow:auto; min-height:0}
+.fillbody{flex:1; min-height:0; overflow:auto}
 
 /* ============ PRIMITIVES ============ */
 .card{background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow)}
 .card.pad{padding:18px}
 .row{display:flex; gap:16px; flex-wrap:wrap}
 .section-title{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:var(--faint); font-weight:600; margin:0 0 14px}
-.btn{
-  display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:0;
-  background:var(--surface-3); color:var(--text); border:0; cursor:pointer;
-  font-family:var(--mono); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em;
-  clip-path:polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px);
-}
+.btn{display:inline-flex; align-items:center; gap:7px; padding:8px 14px; background:var(--surface-3); color:var(--text); border:0; cursor:pointer; font-family:var(--mono); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; clip-path:polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px)}
 .btn:hover{background:var(--border-2)}
 .btn svg{width:14px;height:14px}
 .btn.primary{background:var(--accent); color:var(--accent-ink)}
@@ -108,8 +102,7 @@ button{font-family:inherit}
 .btn.ghost:hover{box-shadow:inset 0 0 0 1px var(--faint)}
 .btn.sm{padding:6px 10px; font-size:10.5px; clip-path:polygon(6px 0, 100% 0, 100% 100%, 0 100%, 0 6px)}
 
-.chip{display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:2px; font-family:var(--mono);
-  font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap}
+.chip{display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:2px; font-family:var(--mono); font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap}
 .chip .d{width:6px;height:6px;border-radius:50%;background:currentColor}
 .chip.good{background:var(--good-soft); color:var(--good)}
 .chip.warn{background:var(--warn-soft); color:var(--warn)}
@@ -117,7 +110,7 @@ button{font-family:inherit}
 .chip.info{background:var(--info-soft); color:var(--info)}
 .chip.mute{background:var(--surface-2); color:var(--muted)}
 
-.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; flex:none}
 .kpi{padding:17px 18px}
 .kpi .k-top{display:flex; align-items:center; justify-content:space-between}
 .kpi .k-top span:first-child{font-family:var(--mono); color:var(--muted); font-size:10.5px; text-transform:uppercase; letter-spacing:.07em}
@@ -139,44 +132,43 @@ button{font-family:inherit}
 .meta .tm{font-family:var(--mono);color:var(--faint);font-size:10.5px}
 
 table{width:100%; border-collapse:collapse; font-size:13px}
-.twrap{overflow-x:auto}
-th{text-align:left; font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--faint); font-weight:600; padding:14px 14px 11px; white-space:nowrap}
+.twrap{overflow:auto; min-height:0}
+th{text-align:left; font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--faint); font-weight:600; padding:14px 14px 11px; white-space:nowrap; position:sticky; top:0; background:var(--surface); z-index:1}
 td{padding:13px 14px; box-shadow:0 -1px 0 var(--border); white-space:nowrap}
 tbody tr:hover{background:var(--surface-2)}
 td .who{font-weight:600}
 td .sm2{color:var(--muted); font-size:12px}
-
 .channel{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
 .channel svg{width:14px;height:14px}
 
-/* charts (planos, sin degradado) */
-.bars{display:flex; align-items:flex-end; gap:14px; height:150px; padding-top:8px}
+/* charts planos */
+.bars{display:flex; align-items:flex-end; gap:14px; flex:1; min-height:120px; padding-top:8px}
 .bars .b{flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end}
-.bars .b .bar{width:100%; max-width:36px; background:var(--accent); border-radius:2px 2px 0 0}
+.bars .b .bar{width:100%; max-width:38px; background:var(--accent); border-radius:2px 2px 0 0}
 .bars .b .bl{font-family:var(--mono); font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:.04em}
 .bars .b .bv{font-family:var(--num); font-size:12px; color:var(--muted); font-weight:600}
 .pbar{height:6px;background:var(--surface-2);border-radius:2px;overflow:hidden}
 .pbar>span{display:block;height:100%;background:var(--accent)}
 
 /* inbox */
-.inbox{display:grid; grid-template-columns:324px 1fr; gap:16px; align-items:start}
-.conv-list .it{cursor:pointer; padding:11px 12px; border-radius:var(--radius-sm); box-shadow:none; margin-bottom:1px}
+.inbox{display:grid; grid-template-columns:324px 1fr; gap:16px; height:100%; min-height:0}
+.conv-list{display:flex; flex-direction:column; min-height:0}
+.conv-list .list{overflow:auto; min-height:0}
+.conv-list .it{cursor:pointer; padding:11px 12px; border-radius:var(--radius-sm); box-shadow:none; margin-bottom:1px; position:relative}
 .conv-list .it:hover{background:var(--surface-2)}
 .conv-list .it.sel{background:var(--surface-2)}
 .conv-list .it.sel::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;background:var(--accent)}
-.conv-list .it{position:relative}
-.thread{display:flex; flex-direction:column; min-height:520px}
-.thread .th-head{display:flex; align-items:center; gap:12px; padding:16px 18px; box-shadow:0 1px 0 var(--border)}
-.thread .th-body{flex:1; padding:20px 18px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; max-height:440px}
+.thread{display:flex; flex-direction:column; min-height:0}
+.thread .th-head{display:flex; align-items:center; gap:12px; padding:16px 18px; box-shadow:0 1px 0 var(--border); flex:none}
+.thread .th-body{flex:1; padding:20px 18px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; min-height:0}
 .bub{max-width:76%; padding:10px 13px; border-radius:var(--radius); font-size:13.5px; line-height:1.45}
 .bub.in{align-self:flex-start; background:var(--surface-2); border-radius:var(--radius) var(--radius) var(--radius) 3px}
 .bub.out{align-self:flex-end; background:var(--accent); color:var(--accent-ink); border-radius:var(--radius) var(--radius) 3px var(--radius)}
 .bub .bt{display:block; font-family:var(--mono); font-size:9.5px; opacity:.7; margin-top:5px}
-.thread .th-foot{box-shadow:0 -1px 0 var(--border); padding:12px 14px; display:flex; gap:10px; align-items:center}
+.thread .th-foot{box-shadow:0 -1px 0 var(--border); padding:12px 14px; display:flex; gap:10px; align-items:center; flex:none}
 .inp{flex:1; background:var(--surface-2); color:var(--text); border:0; border-radius:var(--radius-sm); padding:10px 13px; font-size:13.5px; font-family:inherit}
 .inp:focus{outline:none; box-shadow:inset 0 0 0 1px var(--accent)}
 
-.two{display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start}
 .mini-it{display:flex; gap:11px; padding:11px 0; box-shadow:0 -1px 0 var(--border)}
 .mini-it:first-child{box-shadow:none}
 .mini-it .mi-ico{width:30px;height:30px;border-radius:var(--radius-sm);background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none}
@@ -185,16 +177,16 @@ td .sm2{color:var(--muted); font-size:12px}
 .mini-it .md{font-size:12px;color:var(--muted)}
 
 /* chat con redi */
-.redi-chat{display:flex; flex-direction:column; min-height:560px}
-.redi-chat .rc-body{flex:1; padding:22px; display:flex; flex-direction:column; gap:14px; max-height:480px; overflow-y:auto}
+.redi-chat{display:flex; flex-direction:column; height:100%; min-height:0}
+.redi-chat .rc-body{flex:1; padding:22px; display:flex; flex-direction:column; gap:14px; overflow-y:auto; min-height:0}
 .redi-msg{display:flex; gap:11px; max-width:82%}
-.redi-msg .ra{width:30px;height:30px;flex:none;display:block}
-.redi-msg .ra svg{width:100%;height:100%}
+.redi-msg .ra{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:var(--radius-sm);overflow:hidden}
+.redi-msg .ra img,.redi-msg .ra svg{width:100%;height:100%;object-fit:contain}
 .redi-msg .rb{background:var(--surface-2); padding:11px 14px; border-radius:var(--radius) var(--radius) var(--radius) 3px; font-size:13.5px}
 .redi-msg.me{align-self:flex-end; flex-direction:row-reverse}
 .redi-msg.me .rb{background:var(--accent); color:var(--accent-ink); border-radius:var(--radius) var(--radius) 3px var(--radius)}
-.redi-chat .rc-foot{box-shadow:0 -1px 0 var(--border); padding:14px; display:flex; gap:10px}
-.suggest{display:flex; gap:8px; flex-wrap:wrap; padding:0 22px 4px}
+.redi-chat .rc-foot{box-shadow:0 -1px 0 var(--border); padding:14px; display:flex; gap:10px; flex:none}
+.suggest{display:flex; gap:8px; flex-wrap:wrap; padding:0 22px 4px; flex:none}
 .suggest .s{font-family:var(--mono); font-size:11px; color:var(--muted); background:var(--surface-2); padding:6px 11px; border-radius:2px; cursor:pointer; text-transform:uppercase; letter-spacing:.03em}
 .suggest .s:hover{color:var(--text); background:var(--surface-3)}
 
@@ -203,19 +195,22 @@ td .sm2{color:var(--muted); font-size:12px}
 .def .dv{padding:10px 0; box-shadow:0 -1px 0 var(--border); font-size:13px}
 .def>.dk:first-of-type,.def>.dv:first-of-type{box-shadow:none}
 
-.note{font-size:12.5px; color:var(--muted); background:var(--info-soft); border-radius:var(--radius-sm); padding:12px 14px; display:flex; gap:10px; align-items:flex-start}
+.note{font-size:12.5px; color:var(--muted); background:var(--info-soft); border-radius:var(--radius-sm); padding:12px 14px; display:flex; gap:10px; align-items:flex-start; flex:none}
 .note svg{width:16px;height:16px;color:var(--info);flex:none;margin-top:1px}
 .note b{color:var(--text); font-weight:600}
 
-.hidden{display:none !important}
 .menu-btn{display:none}
 @media (max-width:920px){
-  .app{grid-template-columns:1fr}
+  html,body{overflow:auto}
+  .app{grid-template-columns:1fr; height:auto}
   .side{position:fixed; z-index:40; width:240px; transform:translateX(-100%); transition:transform .2s}
   .side.open{transform:none}
+  .main{height:auto; min-height:100vh}
+  .content{overflow:visible}
+  .dash{height:auto}
+  .fillgrid{grid-template-columns:1fr!important; grid-template-rows:none!important}
   .kpis{grid-template-columns:repeat(2,1fr)}
-  .inbox,.two{grid-template-columns:1fr}
-  .content{padding:18px}
+  .inbox{grid-template-columns:1fr; height:auto}
   .menu-btn{display:grid !important}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -223,25 +218,18 @@ td .sm2{color:var(--muted); font-size:12px}
 </head>
 <body>
 <div class="app">
-  <!-- ================= SIDEBAR ================= -->
   <aside class="side" id="side">
     <div class="brand">
-      <div class="mark" aria-hidden="true">
-        <svg viewBox="0 0 112 110" fill="var(--accent)"><path d="M14 6 H42 V104 H14 Z"/><path d="M46 6 H66 L100 55 L66 104 H46 L76 55 Z"/></svg>
-      </div>
+      <span class="mark"><img src="logo.png" alt="RedLabs" onerror="this.onerror=null;this.outerHTML=LOGO_SVG"></span>
       <div>
         <div class="wm">Redi</div>
         <div class="sub">Cerebro de RedLabs</div>
       </div>
     </div>
     <nav class="nav" id="nav"></nav>
-    <div class="foot">
-      <span class="dot"></span>
-      <small>Redi activo</small>
-    </div>
+    <div class="foot"><span class="dot"></span><small>Redi activo</small></div>
   </aside>
 
-  <!-- ================= MAIN ================= -->
   <div class="main">
     <header class="topbar">
       <button class="iconbtn menu-btn" onclick="document.getElementById('side').classList.toggle('open')" aria-label="Menú">
@@ -262,13 +250,13 @@ td .sm2{color:var(--muted); font-size:12px}
 </div>
 
 <script>
+/* LOGO: usa panel/logo.png. Si no está, cae a este trazo (reemplazá el archivo por el oficial). */
+const LOGO_SVG = '<svg viewBox="0 0 120 126" fill="#EE2B24" aria-hidden="true"><path d="M12 40 L30 18 L38 30 L38 116 L12 116 Z"/><path d="M44 18 L60 18 L104 63 L60 116 L44 116 L78 63 Z"/></svg>';
+
 /* =====================================================================
    REDI · PANEL — capa de datos (DEMO)
-   ---------------------------------------------------------------------
-   Datos de ejemplo para ver el panel funcionando. Para conectarlo de
-   verdad, reemplazá los métodos de REDI_API por llamadas a tus webhooks
-   de n8n o a Firestore. Ejemplo:
-     async leads(){ const r = await fetch(`${BASE}/redi-leads`); return r.json(); }
+   Reemplazá los métodos de REDI_API por llamadas a tus webhooks de n8n
+   o a Firestore. Ej: async leads(){ const r=await fetch(`${BASE}/redi-leads`); return r.json(); }
    ===================================================================== */
 const DEMO = {
   kpis:{ leadsMes:38, leadsMesPrev:29, conversion:34, conversionPrev:28, clientesActivos:11, mrr:640, saldos:1150 },
@@ -366,7 +354,7 @@ const I = {
   hand:'<path d="M8 11V5.5a1.5 1.5 0 0 1 3 0V11M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6H10a5 5 0 0 1-4-2l-2.5-3.2a1.6 1.6 0 0 1 2.4-2L8 12"/>'
 };
 const svg = (p,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||1.7}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
-const rediMark = '<svg viewBox="0 0 112 110" fill="#EE2B24"><path d="M14 6 H42 V104 H14 Z"/><path d="M46 6 H66 L100 55 L66 104 H46 L76 55 Z"/></svg>';
+const rediAvatar = `<img src="logo.png" alt="Redi" onerror="this.onerror=null;this.outerHTML=LOGO_SVG">`;
 const chanIco = c => ({wa:I.wa, ig:I.ig, em:I.em}[c]||I.inbox);
 const chanName = c => ({wa:'WhatsApp', ig:'Instagram', em:'Email'}[c]||c);
 
@@ -382,14 +370,10 @@ const ROUTES = [
   {id:'config', label:'Configuración', icon:I.gear, group:2},
 ];
 const TITLES = {
-  resumen:['Resumen','Panel de control'],
-  bandeja:['Bandeja unificada','WhatsApp · Instagram · Email'],
-  crm:['CRM Clientes','Base de datos y control de pagos'],
-  leads:['Leads','Interesados captados por Redi'],
-  agenda:['Agenda','Llamadas coordinadas por Redi'],
-  reporte:['Reporte semanal','Métricas y recomendaciones'],
-  chat:['Chat con Redi','Preguntale lo que quieras'],
-  config:['Configuración','Cómo trabaja Redi'],
+  resumen:['Resumen','Panel de control'], bandeja:['Bandeja unificada','WhatsApp · Instagram · Email'],
+  crm:['CRM Clientes','Base de datos y control de pagos'], leads:['Leads','Interesados captados por Redi'],
+  agenda:['Agenda','Llamadas coordinadas por Redi'], reporte:['Reporte semanal','Métricas y recomendaciones'],
+  chat:['Chat con Redi','Preguntale lo que quieras'], config:['Configuración','Cómo trabaja Redi'],
 };
 function renderNav(active){
   const groups={0:'Operación',1:'Clientes',2:'Inteligencia'};
@@ -413,14 +397,10 @@ function go(id){
 
 /* ================= HELPERS ================= */
 const $view = ()=>document.getElementById('view');
-// Escapa TODO texto que venga de clientes/afuera antes de meterlo en el DOM (anti-XSS).
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n => 'u$s '+Number(n).toLocaleString('es-AR');
 const pagoChip = p => ({no:['crit','No pagó'], sena:['warn','Seña 50%'], total:['good','Pagado total']}[p]||['mute',p]);
-const estadoChip = e => {
-  const m={Presupuestado:'info',Señado:'warn','Esperando material':'warn','En curso':'info',Entregado:'good',Cerrado:'good',Perdido:'mute'};
-  return [m[e]||'mute', e];
-};
+const estadoChip = e => { const m={Presupuestado:'info',Señado:'warn','Esperando material':'warn','En curso':'info',Entregado:'good',Cerrado:'good',Perdido:'mute'}; return [m[e]||'mute', e]; };
 const statusChip = s => ({redi:['good','Redi atendiendo'], humano:['crit','Requiere humano'], pausado:['warn','En pausa']}[s]||['mute',s]);
 
 /* ================= VIEWS ================= */
@@ -430,41 +410,35 @@ VIEWS.resumen = async ()=>{
   const d = await REDI_API.resumen(); const k=d.kpis;
   const trend=(cur,prev)=>{ const up=cur>=prev; const pct=prev?Math.round((cur-prev)/prev*100):0; return `<b class="${up?'':'dn'}">${up?'▲':'▼'} ${Math.abs(pct)}%</b> vs. previo`; };
   const maxSem=Math.max(...d.semana.map(x=>x.v));
-  $view().innerHTML = `
+  $view().innerHTML = `<div class="dash">
     <div class="kpis">
       ${kpi(I.target,'Leads del mes', k.leadsMes, trend(k.leadsMes,k.leadsMesPrev))}
       ${kpi(I.spark,'Conversión', k.conversion+'%', trend(k.conversion,k.conversionPrev))}
       ${kpi(I.users,'Clientes activos', k.clientesActivos, 'En cartera hoy')}
       ${kpi(I.dollar,'Por cobrar', money(k.saldos), 'Saldos pendientes')}
     </div>
-    <div class="two" style="margin-top:16px">
-      <div class="card pad">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="section-title" style="margin:0">Contactos por día</div><span class="chip mute">Esta semana</span>
-        </div>
-        <div class="bars">
-          ${d.semana.map(x=>`<div class="b"><div class="bv">${x.v}</div><div class="bar" style="height:${Math.max(8,x.v/maxSem*100)}%"></div><div class="bl">${x.l}</div></div>`).join('')}
+    <div class="fillgrid" style="grid-template-columns:1fr 360px; grid-template-rows:1fr 1fr">
+      <div class="card col pad">
+        <div style="display:flex;align-items:center;justify-content:space-between"><div class="section-title" style="margin:0">Contactos por día</div><span class="chip mute">Esta semana</span></div>
+        <div class="bars">${d.semana.map(x=>`<div class="b"><div class="bv">${x.v}</div><div class="bar" style="height:${Math.max(6,x.v/maxSem*100)}%"></div><div class="bl">${x.l}</div></div>`).join('')}</div>
+      </div>
+      <div class="card col pad">
+        <div class="section-title">Movimiento de hoy</div>
+        <div class="fillbody">${d.movimiento.map(m=>`<div class="mini-it"><div class="mi-ico">${svg(I[m.ico]||I.spark)}</div><div><div class="mt">${esc(m.t)}</div><div class="md">${esc(m.d)}</div></div></div>`).join('')}</div>
+      </div>
+      <div class="card col pad">
+        <div class="section-title">Contactos por canal</div>
+        <div class="fillbody" style="display:flex;flex-direction:column;justify-content:center">
+        ${d.canal.map(c=>{const tot=d.canal.reduce((a,b)=>a+b.v,0);const p=Math.round(c.v/tot*100);const cc=c.l==='WhatsApp'?'wa':c.l==='Instagram'?'ig':'em';return `
+          <div style="margin:9px 0"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span class="channel">${svg(chanIco(cc))}${c.l}</span><span class="tnum" style="color:var(--muted)">${c.v} · ${p}%</span></div><div class="pbar"><span style="width:${p}%"></span></div></div>`;}).join('')}
         </div>
       </div>
-      <div class="card pad">
-        <div class="section-title">Movimiento de hoy</div>
-        ${d.movimiento.map(m=>`<div class="mini-it"><div class="mi-ico">${svg(I[m.ico]||I.spark)}</div><div><div class="mt">${esc(m.t)}</div><div class="md">${esc(m.d)}</div></div></div>`).join('')}
+      <div class="card col pad">
+        <div class="section-title">Próximas llamadas</div>
+        <div class="fillbody">${d.agenda.map(a=>`<div class="mini-it"><div class="mi-ico">${svg(I.phone)}</div><div><div class="mt">${esc(a.nombre)}</div><div class="md">${esc(a.dia)} ${esc(a.hora)} · ${esc(a.tema)}</div></div></div>`).join('')}</div>
       </div>
     </div>
-    <div class="two" style="margin-top:16px">
-      <div class="card pad">
-        <div class="section-title">Contactos por canal</div>
-        ${d.canal.map(c=>{const tot=d.canal.reduce((a,b)=>a+b.v,0);const p=Math.round(c.v/tot*100);const cc=c.l==='WhatsApp'?'wa':c.l==='Instagram'?'ig':'em';return `
-          <div style="margin:13px 0">
-            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span class="channel">${svg(chanIco(cc))}${c.l}</span><span class="tnum" style="color:var(--muted)">${c.v} · ${p}%</span></div>
-            <div class="pbar"><span style="width:${p}%"></span></div>
-          </div>`;}).join('')}
-      </div>
-      <div class="card pad">
-        <div class="section-title">Próximas llamadas</div>
-        ${d.agenda.map(a=>`<div class="mini-it"><div class="mi-ico">${svg(I.phone)}</div><div><div class="mt">${esc(a.nombre)}</div><div class="md">${esc(a.dia)} ${esc(a.hora)} · ${esc(a.tema)}</div></div></div>`).join('')}
-      </div>
-    </div>`;
+  </div>`;
 };
 function kpi(icon,label,val,sub){
   return `<div class="card kpi"><div class="k-top"><span>${label}</span><span class="k-ico">${svg(icon)}</span></div><div class="k-val">${val}</div><div class="k-sub">${sub}</div></div>`;
@@ -516,39 +490,39 @@ VIEWS.bandeja = async ()=>{
 
 VIEWS.crm = async ()=>{
   const rows = await REDI_API.crm();
-  $view().innerHTML = `<div class="card"><div class="twrap"><table>
-      <thead><tr><th>Cliente</th><th>Qué quiere</th><th>Servicio</th><th>Presupuesto</th><th>Pago</th><th>Pagado</th><th>Saldo</th><th>Entrega</th><th>Estado</th></tr></thead>
-      <tbody>${rows.map(r=>{const[pc,pt]=pagoChip(r.pago);const[ec,et]=estadoChip(r.estado);return `
-        <tr>
-          <td><div class="who">${esc(r.nombre)}</div><div class="sm2 channel">${svg(chanIco(r.canal))}${esc(r.contacto)}</div></td>
-          <td class="sm2">${esc(r.quiere)}</td>
-          <td>${esc(r.servicios)}</td>
-          <td class="tnum">${r.total?money(r.total):'—'}</td>
-          <td><span class="chip ${pc}">${pt}</span></td>
-          <td class="tnum">${r.pagado?money(r.pagado):'—'}</td>
-          <td class="tnum" style="${r.saldo>0?'color:var(--accent);font-weight:650':''}">${r.saldo>0?money(r.saldo):'—'}</td>
-          <td class="sm2">${esc(r.entrega)}</td>
-          <td><span class="chip ${ec}">${et}</span></td>
-        </tr>`;}).join('')}</tbody>
-    </table></div></div>
-  <div class="note" style="margin-top:14px">${svg(I.info)}<div>Redi carga y actualiza esta tabla sola desde las conversaciones. Es la misma base que vive en tu Google Sheet (<b>CRM Clientes</b>); acá la ves ordenada y luego se sincroniza con Firestore.</div></div>`;
+  $view().innerHTML = `<div class="dash">
+    <div class="card col grow">
+      <div class="twrap"><table>
+        <thead><tr><th>Cliente</th><th>Qué quiere</th><th>Servicio</th><th>Presupuesto</th><th>Pago</th><th>Pagado</th><th>Saldo</th><th>Entrega</th><th>Estado</th></tr></thead>
+        <tbody>${rows.map(r=>{const[pc,pt]=pagoChip(r.pago);const[ec,et]=estadoChip(r.estado);return `
+          <tr>
+            <td><div class="who">${esc(r.nombre)}</div><div class="sm2 channel">${svg(chanIco(r.canal))}${esc(r.contacto)}</div></td>
+            <td class="sm2">${esc(r.quiere)}</td><td>${esc(r.servicios)}</td>
+            <td class="tnum">${r.total?money(r.total):'—'}</td>
+            <td><span class="chip ${pc}">${pt}</span></td>
+            <td class="tnum">${r.pagado?money(r.pagado):'—'}</td>
+            <td class="tnum" style="${r.saldo>0?'color:var(--accent);font-weight:650':''}">${r.saldo>0?money(r.saldo):'—'}</td>
+            <td class="sm2">${esc(r.entrega)}</td>
+            <td><span class="chip ${ec}">${et}</span></td>
+          </tr>`;}).join('')}</tbody>
+      </table></div>
+    </div>
+    <div class="note">${svg(I.info)}<div>Redi carga y actualiza esta tabla sola desde las conversaciones. Es la misma base que vive en tu Google Sheet (<b>CRM Clientes</b>).</div></div>
+  </div>`;
 };
 
 VIEWS.leads = async ()=>{
   const rows = await REDI_API.leads();
-  $view().innerHTML = `<div class="card"><div class="twrap"><table>
+  $view().innerHTML = `<div class="dash"><div class="card col grow"><div class="twrap"><table>
     <thead><tr><th>Fecha</th><th>Nombre</th><th>Contacto</th><th>Canal</th><th>Interés</th><th>Score</th><th>Prioridad</th></tr></thead>
     <tbody>${rows.map(r=>`
       <tr>
-        <td class="sm2 mono">${esc(r.fecha)}</td>
-        <td class="who">${esc(r.nombre)}</td>
-        <td class="sm2">${esc(r.contacto)}</td>
+        <td class="sm2 mono">${esc(r.fecha)}</td><td class="who">${esc(r.nombre)}</td><td class="sm2">${esc(r.contacto)}</td>
         <td><span class="channel">${svg(chanIco(r.canal))}${chanName(r.canal)}</span></td>
-        <td>${esc(r.interes)}</td>
-        <td>${scoreBar(r.score)}</td>
+        <td>${esc(r.interes)}</td><td>${scoreBar(r.score)}</td>
         <td>${r.prioridad==='alta'?'<span class="chip crit">Alta</span>':'<span class="chip mute">Normal</span>'}</td>
       </tr>`).join('')}</tbody>
-  </table></div></div>`;
+  </table></div></div></div>`;
 };
 function scoreBar(s){
   return `<span style="display:inline-flex;align-items:center;gap:8px"><span style="width:52px" class="pbar"><span style="width:${s*10}%;background:${s>=8?'var(--good)':s>=6?'var(--warn)':'var(--faint)'}"></span></span><span class="tnum">${s}</span></span>`;
@@ -556,39 +530,38 @@ function scoreBar(s){
 
 VIEWS.agenda = async ()=>{
   const rows = await REDI_API.agenda();
-  $view().innerHTML = `<div class="card pad">
+  $view().innerHTML = `<div class="dash"><div class="card col grow pad">
     <div class="section-title">Próximas llamadas coordinadas por Redi</div>
-    <div class="list">
+    <div class="fillbody list">
       ${rows.map(a=>`<div class="it"><div class="mi-ico" style="width:40px;height:40px">${svg(I.phone)}</div>
         <div class="meta"><div class="nm">${esc(a.nombre)}</div><div class="ms">${esc(a.tema)}</div></div>
         <div style="text-align:right"><div style="font-weight:650">${esc(a.dia)}</div><div class="tm">${esc(a.hora)}</div></div></div>`).join('')}
-    </div></div>`;
+    </div></div></div>`;
 };
 
 VIEWS.reporte = async ()=>{
-  const r = await REDI_API.reporte();
-  const maxA=Math.max(...r.posts.map(p=>p.alcance));
-  $view().innerHTML = `
+  const r = await REDI_API.reporte(); const maxA=Math.max(...r.posts.map(p=>p.alcance));
+  $view().innerHTML = `<div class="dash">
     <div class="kpis">
       ${kpi(I.user,'Contactaron', r.contactaron,'esta semana')}
       ${kpi(I.check,'Cerrados', r.cerrados, r.conversion+'% conversión')}
       ${kpi(I.spark,'Conversión', r.conversion+'%','de contacto a cierre')}
       ${kpi(I.phone,'Llamadas', r.llamadas,'agendadas')}
     </div>
-    <div class="two" style="margin-top:16px">
-      <div class="card pad">
+    <div class="fillgrid" style="grid-template-columns:1fr 360px; grid-template-rows:1fr">
+      <div class="card col pad">
         <div class="section-title">Publicaciones que más trajeron</div>
-        ${r.posts.map(p=>`<div style="margin:14px 0">
+        <div class="fillbody">${r.posts.map(p=>`<div style="margin:14px 0">
           <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${esc(p.txt)}</span><span class="tnum" style="color:var(--muted)">${p.inter} int.</span></div>
           <div class="pbar"><span style="width:${Math.round(p.alcance/maxA*100)}%"></span></div>
-          <div class="tm" style="margin-top:5px">${p.alcance.toLocaleString('es-AR')} de alcance</div>
-        </div>`).join('')}
+          <div class="tm" style="margin-top:5px">${p.alcance.toLocaleString('es-AR')} de alcance</div></div>`).join('')}</div>
       </div>
-      <div class="card pad">
+      <div class="card col pad">
         <div class="section-title">Consejos de Redi</div>
-        ${r.consejos.map(c=>`<div class="mini-it"><div class="mi-ico">${svg(I.bolt)}</div><div class="mt" style="font-weight:500;line-height:1.45">${esc(c)}</div></div>`).join('')}
+        <div class="fillbody">${r.consejos.map(c=>`<div class="mini-it"><div class="mi-ico">${svg(I.bolt)}</div><div class="mt" style="font-weight:500;line-height:1.45">${esc(c)}</div></div>`).join('')}</div>
       </div>
-    </div>`;
+    </div>
+  </div>`;
 };
 
 let rediHist=[{o:'redi',t:'¡Hola Luca! Soy Redi. Te ayudo a llevar el control de RedLabs. Preguntame por los leads, los saldos por cobrar, el movimiento de hoy o los proyectos en curso.'}];
@@ -598,24 +571,15 @@ VIEWS.chat = async ()=>{
     $view().innerHTML = `<div class="card redi-chat">
       <div class="rc-body" id="rcBody">
         ${rediHist.map(m=>m.o==='redi'
-          ? `<div class="redi-msg"><div class="ra">${rediMark}</div><div class="rb">${esc(m.t)}</div></div>`
+          ? `<div class="redi-msg"><div class="ra">${rediAvatar}</div><div class="rb">${esc(m.t)}</div></div>`
           : `<div class="redi-msg me"><div class="rb">${esc(m.t)}</div></div>`).join('')}
       </div>
       <div class="suggest">${suger.map(s=>`<span class="s">${esc(s)}</span>`).join('')}</div>
-      <div class="rc-foot">
-        <input class="inp" id="rcInp" placeholder="Escribile a Redi…" autocomplete="off"/>
-        <button class="btn primary" id="rcSend">${svg(I.send)} Enviar</button>
-      </div>
+      <div class="rc-foot"><input class="inp" id="rcInp" placeholder="Escribile a Redi…" autocomplete="off"/><button class="btn primary" id="rcSend">${svg(I.send)} Enviar</button></div>
     </div>`;
     const body=document.getElementById('rcBody'); body.scrollTop=body.scrollHeight;
     const inp=document.getElementById('rcInp');
-    const ask=async(text)=>{
-      if(!text.trim())return;
-      rediHist.push({o:'me',t:text}); paint();
-      rediHist.push({o:'redi',t:'…'}); paint();
-      const ans=await REDI_API.preguntarARedi(text);
-      rediHist[rediHist.length-1]={o:'redi',t:ans}; paint();
-    };
+    const ask=async(text)=>{ if(!text.trim())return; rediHist.push({o:'me',t:text}); paint(); rediHist.push({o:'redi',t:'…'}); paint(); const ans=await REDI_API.preguntarARedi(text); rediHist[rediHist.length-1]={o:'redi',t:ans}; paint(); };
     document.getElementById('rcSend').onclick=()=>ask(inp.value);
     inp.onkeydown=e=>{if(e.key==='Enter')ask(inp.value);};
     $view().querySelectorAll('.suggest .s').forEach(s=>s.onclick=()=>ask(s.textContent));
@@ -625,42 +589,29 @@ VIEWS.chat = async ()=>{
 };
 
 VIEWS.config = async ()=>{
-  $view().innerHTML = `
-  <div class="row">
-    <div class="card pad" style="flex:1;min-width:280px">
-      <div class="section-title">Fuente de precios</div>
-      <div class="def">
-        <div class="dk">Origen</div><div class="dv">Google Sheet · Catálogo Servicios</div>
-        <div class="dk">Actualización</div><div class="dv">En tiempo real</div>
-        <div class="dk">Alcance</div><div class="dv">14 servicios · 7 combos · web</div>
+  $view().innerHTML = `<div class="dash scroll">
+    <div class="row">
+      <div class="card pad" style="flex:1;min-width:280px">
+        <div class="section-title">Fuente de precios</div>
+        <div class="def"><div class="dk">Origen</div><div class="dv">Google Sheet · Catálogo Servicios</div><div class="dk">Actualización</div><div class="dv">En tiempo real</div><div class="dk">Alcance</div><div class="dv">14 servicios · 7 combos · web</div></div>
+      </div>
+      <div class="card pad" style="flex:1;min-width:280px">
+        <div class="section-title">Atención</div>
+        <div class="def"><div class="dk">Disponibilidad</div><div class="dv">Redi responde 24/7</div><div class="dk">Horario humano</div><div class="dv">Lun a Vie · 09:00–19:00</div><div class="dk">Seña</div><div class="dv">50% por transferencia</div></div>
       </div>
     </div>
-    <div class="card pad" style="flex:1;min-width:280px">
-      <div class="section-title">Atención</div>
-      <div class="def">
-        <div class="dk">Disponibilidad</div><div class="dv">Redi responde 24/7</div>
-        <div class="dk">Horario humano</div><div class="dv">Lun a Vie · 09:00–19:00</div>
-        <div class="dk">Seña</div><div class="dv">50% por transferencia</div>
+    <div class="row" style="margin-top:16px">
+      <div class="card pad" style="flex:1;min-width:280px">
+        <div class="section-title">Motor de IA</div>
+        <div class="def"><div class="dk">Conversación</div><div class="dv">GPT-4o · temperatura 0.3</div><div class="dk">Memoria</div><div class="dv">Persistente por contacto</div><div class="dk">Audios</div><div class="dv">Transcripción con Whisper</div></div>
+      </div>
+      <div class="card pad" style="flex:1;min-width:280px">
+        <div class="section-title">Chats en pausa</div>
+        <div class="list"><div class="it"><div class="avatar wa">GF</div><div class="meta"><div class="nm">Gimnasio Fuerza</div><div class="ms">Lo estás atendiendo vos</div></div><button class="btn sm">${svg(I.play)} Reactivar</button></div></div>
       </div>
     </div>
-  </div>
-  <div class="row" style="margin-top:16px">
-    <div class="card pad" style="flex:1;min-width:280px">
-      <div class="section-title">Motor de IA</div>
-      <div class="def">
-        <div class="dk">Conversación</div><div class="dv">GPT-4o · temperatura 0.3</div>
-        <div class="dk">Memoria</div><div class="dv">Persistente por contacto</div>
-        <div class="dk">Audios</div><div class="dv">Transcripción con Whisper</div>
-      </div>
-    </div>
-    <div class="card pad" style="flex:1;min-width:280px">
-      <div class="section-title">Chats en pausa</div>
-      <div class="list">
-        <div class="it"><div class="avatar wa">GF</div><div class="meta"><div class="nm">Gimnasio Fuerza</div><div class="ms">Lo estás atendiendo vos</div></div><button class="btn sm">${svg(I.play)} Reactivar</button></div>
-      </div>
-    </div>
-  </div>
-  <div class="note" style="margin-top:16px">${svg(I.info)}<div>Este panel corre con datos de ejemplo. Para conectarlo a tu operación real se enlaza la capa de datos (<b>REDI_API</b>) con tus webhooks de n8n o con Firestore. Está comentado en el código, listo para el deploy en Firebase o Vercel.</div></div>`;
+    <div class="note" style="margin-top:16px">${svg(I.info)}<div>Este panel corre con datos de ejemplo. Para conectarlo a tu operación real se enlaza la capa de datos (<b>REDI_API</b>) con tus webhooks de n8n o con Firestore.</div></div>
+  </div>`;
 };
 
 /* ================= THEME ================= */

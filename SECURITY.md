@@ -18,13 +18,14 @@ Estado honesto de la seguridad del proyecto. Lo dividimos en **lo que ya está r
 
 ## ⚠️ Falta cerrar antes de producción (importante)
 
-### 1. Login en el panel — **crítico**
-Hoy el panel **no tiene autenticación**: cualquiera con la URL vería los datos.
-Ahora corre con datos demo, así que no hay fuga real, pero **antes de conectarlo a datos
-reales hay que ponerle login.** Opciones (elegí una):
-- **Firebase Auth** (encaja con tu stack) — login con tu Google, y las reglas de Firestore
-  permiten leer solo a tu usuario.
-- **Vercel Password Protection** (Pro) o **Cloudflare Access** — más simple, protege toda la URL.
+### 1. Acceso al panel — **RESUELTO en Vercel** ✅
+El panel está protegido con **usuario + contraseña** (`panel/middleware.js`, Vercel Edge Basic
+Auth). Aunque alguien encuentre el link, sin la clave no entra; y `robots.txt` + `noindex` evitan
+que aparezca en buscadores. **Falta que setees las variables `PANEL_USER` y `PANEL_PASS`** en
+Vercel (Settings → Environment Variables) y redeployes — hasta que lo hagas, el panel queda
+bloqueado por defecto. Ver `panel/README.md`.
+- Si algún día lo pasás a **Firebase Hosting**, ahí no hay middleware: usar **Firebase Auth**.
+- Para acceso multiusuario o SSO, se puede sumar Firebase Auth más adelante.
 
 ### 2. Verificar los webhooks de n8n — **crítico**
 Los webhooks de WhatsApp e Instagram hoy aceptan **cualquier POST**. Alguien que descubra la

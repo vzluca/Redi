@@ -14,9 +14,26 @@ Estética alineada al sistema de marca de RedLabs. Tiene modo claro/oscuro (bot�
   se cargan de Google Fonts en producción; en el preview aislado caen a la fuente del sistema.
 - **Estilo:** todo plano (sin degradados), sin bordes innecesarios (se separa por superficie y
   sombra), esquinas angulares y botones con la esquina cortada de la marca.
-- **Logo:** está recreado en SVG (rojo) en el sidebar y en el avatar de Redi. Para usar el
-  **archivo oficial**, poné tu `logo.svg` en `panel/` y reemplazá el `<svg>` del bloque
-  `.brand .mark` por `<img src="logo.svg" alt="RedLabs">` (funciona en warm white o black según el fondo).
+- **Logo:** el panel carga **`panel/logo.png`** como imagen (en el sidebar y en el avatar de
+  Redi). **Poné tu logo oficial ahí**: subí el archivo a `panel/logo.png` y listo, aparece
+  solo. Si el archivo no existe todavía, se muestra un trazo de respaldo en rojo (no queda roto).
+  Podés usar la versión warm white o black exportándola con ese nombre según el fondo.
+
+## Acceso / contraseña (protección)
+El panel está protegido con **usuario + contraseña** vía `middleware.js` (Vercel Edge). Aunque
+alguien encuentre el link, sin la clave no entra. La clave **no está en el código**: se lee de
+variables de entorno. En **Vercel → Project → Settings → Environment Variables** creá:
+
+| Variable | Valor |
+|---|---|
+| `PANEL_USER` | el usuario que quieras (ej. `luca`) |
+| `PANEL_PASS` | una contraseña larga y privada |
+
+Después **redeploy**. Si esas variables no están seteadas, el panel queda **bloqueado** por
+seguridad (nadie entra). Además, `robots.txt` y el header `noindex` evitan que aparezca en Google.
+
+> Nota: esta protección corre en **Vercel**. En **Firebase Hosting** no hay middleware; ahí la
+> alternativa es una pantalla de login con **Firebase Auth**.
 
 ## Es un solo archivo
 
