@@ -344,6 +344,29 @@
       "columnas": ["contacto", "motivo"],
       "instruccion": "Si el 'contacto' está en la hoja 'Pausas', Redi NO responde ese chat (lo atiende Luca en persona). Para reactivar, se borra la fila. En la Etapa 2 esto es un botón en el panel."
     },
+    "contratacion": {
+      "modalidades": {
+        "alquiler": "El flujo vive en el n8n de RedLabs (lo aloja Luca). Implementación reducida + cuota mensual. Si el cliente deja de pagar, se pausa. Ideal para quien no quiere administrar nada. Incluye mantenimiento.",
+        "venta": "Pago único. El cliente se lleva el flujo y lo aloja en SU n8n con SUS cuentas (incluida su clave de OpenAI). Es 100% suyo. Si algo se rompe, contrata soporte por hora.",
+        "venta_mantenimiento": "Compra + cuota mensual de mantenimiento. El cliente lo aloja en su n8n, pero suma a Luca como COLABORADOR: Luca lo ve, lo monitorea, lo mejora y lo arregla sin alojarlo. La cuota cubre que esté siempre andando y evolucionando."
+      },
+      "quien_paga_tokens": "Siempre el cliente pone su propia clave de OpenAI (así los tokens no son costo de RedLabs). Luca puede ponerla y cobrarla dentro de la cuota, con tope mensual.",
+      "explicacion_simple_cliente": "Redi lo explica sin tecnicismos: 'Podés alquilarlo (lo mantenemos nosotros y pagás una cuota), comprarlo (es tuyo y lo manejás vos), o comprarlo con mantenimiento (es tuyo pero lo seguimos cuidando y mejorando cada mes).'"
+    },
+    "costos_ia": {
+      "nota": "Sirve para que Redi estime cuánto va a consumir de IA por mes según el volumen, lo pase a USD y ajuste el mantenimiento. NUNCA le habla de 'tokens' al cliente: le pregunta cuántos mensajes/consultas por mes espera.",
+      "modelo_default_clientes": "gpt-4o-mini",
+      "modelo_calidad": "gpt-4o (reservado para Redi, el bot de ventas de RedLabs)",
+      "temperature_default": 0.2,
+      "usd_por_mensaje": { "gpt-4o-mini": 0.001, "gpt-4o": 0.01 },
+      "nota_precio": "Aproximado (incluye entrada + salida + herramientas por mensaje). Verificar en https://openai.com/api/pricing y ajustar.",
+      "mensajes_incluidos_en_base": 300,
+      "margen_objetivo": 0.6,
+      "multiplicador_recargo": 2.5,
+      "formula_recargo_volumen": "Si mensajes_mes > mensajes_incluidos_en_base: costo_ia_usd = mensajes_mes * usd_por_mensaje[modelo]; recargo_mensual = redondear(costo_ia_usd * multiplicador_recargo). Ese recargo se SUMA a la cuota base del servicio. Con multiplicador 2.5, la IA queda en ~40% del recargo → margen ~60%.",
+      "tope_openai_por_cliente_usd": "Poner en la cuenta/clave de OpenAI del cliente un límite mensual = costo_ia_usd * 1.3 (colchón). Así, si el volumen se dispara, corta y RedLabs no pierde plata.",
+      "regla": "Un flujo puede ser simple pero con volumen ALTO de mensajes; ahí el mantenimiento sube por el consumo, no por la complejidad. Redi siempre estima el volumen antes de dar la cuota mensual de un servicio con IA."
+    },
     "ia": {
       "modelo_conversacion": "gpt-4o",
       "modelo_tareas_internas": "gpt-4o-mini",
