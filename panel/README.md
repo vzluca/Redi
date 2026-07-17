@@ -20,17 +20,22 @@ Estética alineada al sistema de marca de RedLabs. Tiene modo claro/oscuro (bot�
   Podés usar la versión warm white o black exportándola con ese nombre según el fondo.
 
 ## Acceso / contraseña (protección)
-El panel está protegido con **usuario + contraseña** vía `middleware.js` (Vercel Edge). Aunque
-alguien encuentre el link, sin la clave no entra. La clave **no está en el código**: se lee de
-variables de entorno. En **Vercel → Project → Settings → Environment Variables** creá:
+El panel muestra una **pantalla de login propia** (usuario + contraseña, con la estética de
+RedLabs) antes de dejar ver nada, vía `middleware.js` (Vercel Edge). Al ingresar bien, se guarda
+una sesión por cookie (7 días); hay logout en `/__logout`. Aunque alguien encuentre el link, sin
+la clave no entra. La clave **no está en el código**: se lee de variables de entorno.
+
+**En Vercel (menú nuevo):** Settings → **Environments** → clic en **Production** → sección
+**Environment Variables** → **Create**:
 
 | Variable | Valor |
 |---|---|
 | `PANEL_USER` | el usuario que quieras (ej. `luca`) |
 | `PANEL_PASS` | una contraseña larga y privada |
 
-Después **redeploy**. Si esas variables no están seteadas, el panel queda **bloqueado** por
-seguridad (nadie entra). Además, `robots.txt` y el header `noindex` evitan que aparezca en Google.
+Después **Deployments → último → ⋯ → Redeploy**. Si esas variables no están seteadas, el panel
+queda **bloqueado** por seguridad. Además, `robots.txt` y el header `noindex` evitan que aparezca
+en Google.
 
 > Nota: esta protección corre en **Vercel**. En **Firebase Hosting** no hay middleware; ahí la
 > alternativa es una pantalla de login con **Firebase Auth**.
