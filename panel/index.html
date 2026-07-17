@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Redi — Panel de RedLabs</title>
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#0E0F12; --bg-2:#121317; --surface:#16181D; --surface-2:#1B1E24;
+  --border:#23262E; --border-2:#2C3038;
+  --text:#F4F5F7; --muted:#9AA0AB; --faint:#6B717C;
+  --accent:#E5322D; --accent-hover:#F04A45; --accent-soft:rgba(229,50,45,.12);
+  --good:#3FB950; --good-soft:rgba(63,185,80,.13);
+  --warn:#E3B341; --warn-soft:rgba(227,179,65,.13);
+  --info:#4C8DFF; --info-soft:rgba(76,141,255,.13);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+  --radius:12px; --radius-sm:8px;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+:root[data-theme="light"]{
+  --bg:#F6F7F9; --bg-2:#FFFFFF; --surface:#FFFFFF; --surface-2:#F1F3F6;
+  --border:#E4E7EC; --border-2:#D7DBE2;
+  --text:#15171C; --muted:#5B6270; --faint:#8A909C;
+  --accent:#D62A25; --accent-hover:#B92019; --accent-soft:rgba(214,42,37,.09);
+  --good:#1E874B; --good-soft:rgba(30,135,75,.10);
+  --warn:#B3841B; --warn-soft:rgba(179,132,27,.12);
+  --info:#2E6DE0; --info-soft:rgba(46,109,224,.10);
+  --shadow:0 1px 2px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--sans);
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+::selection{background:var(--accent-soft)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ============ APP SHELL ============ */
+.app{display:grid; grid-template-columns:236px 1fr; min-height:100vh}
+
+/* ---- Sidebar ---- */
+.side{
+  background:var(--bg-2); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+}
+.brand{display:flex; align-items:center; gap:11px; padding:20px 20px 18px}
+.brand .mark{
+  width:30px; height:30px; border-radius:8px; flex:none;
+  background:linear-gradient(150deg,var(--accent),#8f1512);
+  display:grid; place-items:center; color:#fff; font-weight:800; font-size:15px;
+  box-shadow:0 2px 10px rgba(229,50,45,.35);
+}
+.brand .wm{font-weight:700; letter-spacing:-.02em; font-size:16px}
+.brand .wm b{color:var(--accent)}
+.brand .sub{font-size:11px; color:var(--faint); margin-top:1px; letter-spacing:.02em}
+.nav{padding:6px 12px; display:flex; flex-direction:column; gap:2px; overflow-y:auto}
+.nav .lbl{font-size:10.5px; text-transform:uppercase; letter-spacing:.09em; color:var(--faint); padding:14px 10px 6px}
+.nav a{
+  display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:8px;
+  color:var(--muted); font-weight:500; cursor:pointer; position:relative;
+}
+.nav a:hover{background:var(--surface); color:var(--text)}
+.nav a.active{background:var(--surface); color:var(--text)}
+.nav a.active::before{content:""; position:absolute; left:-12px; top:8px; bottom:8px; width:3px; background:var(--accent); border-radius:0 3px 3px 0}
+.nav a svg{width:17px; height:17px; flex:none; opacity:.9}
+.nav .badge{margin-left:auto; background:var(--accent); color:#fff; font-size:10.5px; font-weight:700; min-width:18px; height:18px; padding:0 5px; border-radius:9px; display:grid; place-items:center}
+.side .foot{margin-top:auto; padding:14px 16px; border-top:1px solid var(--border); display:flex; align-items:center; gap:10px}
+.side .foot .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px var(--good-soft)}
+.side .foot small{color:var(--faint); font-size:11px}
+
+/* ---- Main ---- */
+.main{display:flex; flex-direction:column; min-width:0}
+.topbar{
+  display:flex; align-items:center; gap:16px; padding:16px 28px;
+  border-bottom:1px solid var(--border); position:sticky; top:0; background:color-mix(in srgb,var(--bg) 88%,transparent); backdrop-filter:blur(8px); z-index:5;
+}
+.topbar h1{font-size:19px; font-weight:650; letter-spacing:-.02em; margin:0}
+.topbar .crumb{color:var(--faint); font-size:12.5px; margin-top:2px}
+.topbar .spacer{flex:1}
+.iconbtn{
+  width:36px; height:36px; border-radius:9px; border:1px solid var(--border);
+  background:var(--surface); color:var(--muted); display:grid; place-items:center; cursor:pointer;
+}
+.iconbtn:hover{color:var(--text); border-color:var(--border-2)}
+.iconbtn svg{width:17px;height:17px}
+.content{padding:26px 28px 60px; max-width:1180px; width:100%}
+
+/* ============ PRIMITIVES ============ */
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow)}
+.card.pad{padding:18px}
+.grid{display:grid; gap:16px}
+.row{display:flex; gap:16px; flex-wrap:wrap}
+.section-title{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600; margin:0 0 12px}
+.btn{
+  display:inline-flex; align-items:center; gap:7px; padding:8px 13px; border-radius:9px;
+  border:1px solid var(--border-2); background:var(--surface-2); color:var(--text);
+  font-weight:550; font-size:13px; cursor:pointer;
+}
+.btn:hover{border-color:var(--faint)}
+.btn svg{width:15px;height:15px}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn.primary:hover{background:var(--accent-hover); border-color:var(--accent-hover)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px; font-size:12px}
+
+.chip{display:inline-flex; align-items:center; gap:6px; padding:3px 9px; border-radius:20px; font-size:11.5px; font-weight:600; letter-spacing:.01em; white-space:nowrap}
+.chip .d{width:6px;height:6px;border-radius:50%}
+.chip.good{background:var(--good-soft); color:var(--good)}
+.chip.warn{background:var(--warn-soft); color:var(--warn)}
+.chip.crit{background:var(--accent-soft); color:var(--accent)}
+.chip.info{background:var(--info-soft); color:var(--info)}
+.chip.mute{background:var(--surface-2); color:var(--muted)}
+
+.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+.kpi{padding:16px 18px}
+.kpi .k-top{display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:12.5px; font-weight:500}
+.kpi .k-ico{width:30px;height:30px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;color:var(--muted)}
+.kpi .k-ico svg{width:16px;height:16px}
+.kpi .k-val{font-size:27px; font-weight:700; letter-spacing:-.02em; margin:12px 0 4px}
+.kpi .k-sub{font-size:12px; color:var(--faint)}
+.kpi .k-sub b{color:var(--good); font-weight:650}
+.kpi .k-sub b.dn{color:var(--accent)}
+
+.list{display:flex; flex-direction:column}
+.list .it{display:flex; align-items:center; gap:12px; padding:12px 4px; border-top:1px solid var(--border)}
+.list .it:first-child{border-top:0}
+.avatar{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;font-weight:650;font-size:13px;color:#fff}
+.avatar.wa{background:#1f7a52}.avatar.ig{background:#a12a6d}.avatar.em{background:#3a5bbf}
+.meta{min-width:0;flex:1}
+.meta .nm{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .ms{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .tm{color:var(--faint);font-size:11.5px}
+
+table{width:100%; border-collapse:collapse; font-size:13px}
+.twrap{overflow-x:auto}
+th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); font-weight:600; padding:0 14px 10px; white-space:nowrap}
+td{padding:13px 14px; border-top:1px solid var(--border); white-space:nowrap}
+tbody tr:hover{background:var(--surface-2)}
+td .who{font-weight:600}
+td .sm2{color:var(--muted); font-size:12px}
+
+.channel{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px}
+.channel svg{width:14px;height:14px}
+
+/* charts */
+.bars{display:flex; align-items:flex-end; gap:14px; height:150px; padding-top:8px}
+.bars .b{flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end}
+.bars .b .bar{width:100%; max-width:34px; background:linear-gradient(180deg,var(--accent),#8f1512); border-radius:6px 6px 3px 3px}
+.bars .b .bl{font-size:11px; color:var(--faint)}
+.bars .b .bv{font-size:11.5px; color:var(--muted); font-weight:600}
+
+/* inbox split */
+.inbox{display:grid; grid-template-columns:320px 1fr; gap:16px; align-items:start}
+.conv-list .it{cursor:pointer; padding-left:12px; padding-right:12px; border-radius:10px; border-top:0; margin-bottom:2px}
+.conv-list .it:hover{background:var(--surface-2)}
+.conv-list .it.sel{background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--border-2)}
+.thread{display:flex; flex-direction:column; min-height:520px}
+.thread .th-head{display:flex; align-items:center; gap:12px; padding:16px 18px; border-bottom:1px solid var(--border)}
+.thread .th-body{flex:1; padding:20px 18px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; max-height:440px}
+.bub{max-width:76%; padding:10px 13px; border-radius:13px; font-size:13.5px; line-height:1.45}
+.bub.in{align-self:flex-start; background:var(--surface-2); border:1px solid var(--border); border-bottom-left-radius:4px}
+.bub.out{align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px}
+.bub .bt{display:block; font-size:10.5px; opacity:.7; margin-top:5px}
+.thread .th-foot{border-top:1px solid var(--border); padding:12px 14px; display:flex; gap:10px; align-items:center}
+.inp{flex:1; background:var(--surface-2); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:10px 13px; font-size:13.5px; font-family:inherit}
+.inp:focus{outline:none; border-color:var(--border-2)}
+
+.empty{display:grid; place-items:center; text-align:center; color:var(--faint); padding:60px 20px; gap:10px}
+.empty svg{width:34px;height:34px;opacity:.5}
+
+.two{display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start}
+.mini-it{display:flex; gap:11px; padding:11px 0; border-top:1px solid var(--border)}
+.mini-it:first-child{border-top:0}
+.mini-it .mi-ico{width:30px;height:30px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none}
+.mini-it .mi-ico svg{width:15px;height:15px}
+.mini-it .mt{font-size:13px;font-weight:550}
+.mini-it .md{font-size:12px;color:var(--muted)}
+
+/* chat con redi */
+.redi-chat{display:flex; flex-direction:column; min-height:560px}
+.redi-chat .rc-body{flex:1; padding:22px; display:flex; flex-direction:column; gap:14px; max-height:480px; overflow-y:auto}
+.redi-msg{display:flex; gap:11px; max-width:80%}
+.redi-msg .ra{width:30px;height:30px;border-radius:8px;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;background:linear-gradient(150deg,var(--accent),#8f1512)}
+.redi-msg .rb{background:var(--surface-2); border:1px solid var(--border); padding:11px 14px; border-radius:12px; border-top-left-radius:4px; font-size:13.5px}
+.redi-msg.me{align-self:flex-end; flex-direction:row-reverse}
+.redi-msg.me .rb{background:var(--accent); color:#fff; border-top-left-radius:12px; border-top-right-radius:4px}
+.redi-chat .rc-foot{border-top:1px solid var(--border); padding:14px; display:flex; gap:10px}
+.suggest{display:flex; gap:8px; flex-wrap:wrap; padding:0 22px 4px}
+.suggest .s{font-size:12px; color:var(--muted); border:1px solid var(--border); background:var(--surface-2); padding:6px 11px; border-radius:20px; cursor:pointer}
+.suggest .s:hover{border-color:var(--faint); color:var(--text)}
+
+.def{display:grid; grid-template-columns:180px 1fr; gap:2px 18px; align-items:center}
+.def .dk{color:var(--muted); font-size:12.5px; padding:9px 0}
+.def .dv{padding:9px 0; border-top:1px solid var(--border)}
+.def .dk{border-top:1px solid var(--border)}
+.def>.dk:first-of-type,.def>.dv:first-of-type{border-top:0}
+
+.note{font-size:12.5px; color:var(--muted); background:var(--info-soft); border:1px solid color-mix(in srgb,var(--info) 24%,transparent); border-radius:10px; padding:11px 13px; display:flex; gap:9px; align-items:flex-start}
+.note svg{width:16px;height:16px;color:var(--info);flex:none;margin-top:1px}
+
+.hidden{display:none !important}
+@media (max-width:920px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed; z-index:40; width:236px; transform:translateX(-100%); transition:transform .2s}
+  .side.open{transform:none}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .inbox,.two{grid-template-columns:1fr}
+  .content{padding:18px}
+  .menu-btn{display:grid !important}
+}
+.menu-btn{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="side" id="side">
+    <div class="brand">
+      <div class="mark">R</div>
+      <div>
+        <div class="wm">Red<b>i</b></div>
+        <div class="sub">Cerebro de RedLabs</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="foot">
+      <span class="dot"></span>
+      <small>Redi activo · atendiendo</small>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <header class="topbar">
+      <button class="iconbtn menu-btn" onclick="document.getElementById('side').classList.toggle('open')" aria-label="Menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <h1 id="pageTitle">Resumen</h1>
+        <div class="crumb" id="pageCrumb">Panel de control · RedLabs</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn ghost sm" id="periodBtn">Últimos 7 días</button>
+      <button class="iconbtn" id="themeBtn" aria-label="Cambiar tema">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      </button>
+    </header>
+    <main class="content" id="view"></main>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   REDI · PANEL — capa de datos (DEMO)
+   ---------------------------------------------------------------------
+   Los datos de abajo son de ejemplo para que veas el panel funcionando.
+   Para conectarlo de verdad, reemplazá los métodos de REDI_API por
+   llamadas a tus webhooks de n8n o a Firestore. Ejemplo:
+
+     async leads(){ const r = await fetch(`${BASE}/redi-leads`); return r.json(); }
+
+   Cada método devuelve la misma forma de datos que ves acá.
+   ===================================================================== */
+const DEMO = {
+  kpis:{ leadsMes:38, leadsMesPrev:29, conversion:34, conversionPrev:28,
+         clientesActivos:11, mrr:640, saldos:1150 },
+  movimientoHoy:[
+    {tipo:'lead', ico:'user', t:'Nuevo lead — Estudio Contable Vera', d:'WhatsApp · quiere responder mails solo'},
+    {tipo:'pago', ico:'dollar', t:'Seña recibida — Panadería Rosales', d:'u$s 170 · Landing Page'},
+    {tipo:'llamada', ico:'phone', t:'Llamada agendada — Inmobiliaria Sur', d:'Mañana 15:30 · dudas ACM'},
+    {tipo:'venta', ico:'check', t:'Cerró — Gimnasio Fuerza', d:'Combo Atención Total · alquiler'},
+  ],
+  contactosCanal:[ {l:'WhatsApp',v:22},{l:'Instagram',v:11},{l:'Email',v:5} ],
+  semana:[ {l:'Lun',v:5},{l:'Mar',v:8},{l:'Mié',v:4},{l:'Jue',v:9},{l:'Vie',v:7},{l:'Sáb',v:3},{l:'Dom',v:2} ],
+  conversaciones:[
+    {id:1, canal:'wa', nombre:'Estudio Contable Vera', ini:'EV', ultimo:'¿Y eso cuánto saldría por mes?', hora:'11:42', estado:'redi', sinLeer:2,
+      msgs:[{o:'in',t:'Hola, quiero automatizar la respuesta de mails',h:'11:38'},{o:'out',t:'¡Hola! Soy Redi 👋 Contame, ¿qué tipo de mails recibís más seguido?',h:'11:39'},{o:'in',t:'Consultas de clientes, la mayoría repetidas',h:'11:40'},{o:'out',t:'Perfecto. Para eso tenemos la Respuesta Automática de Emails: clasifica y responde las frecuentes, y te deriva solo lo importante.',h:'11:41'},{o:'in',t:'¿Y eso cuánto saldría por mes?',h:'11:42'}]},
+    {id:2, canal:'ig', nombre:'Panadería Rosales', ini:'PR', ultimo:'Listo, transferí la seña', hora:'10:15', estado:'redi', sinLeer:0,
+      msgs:[{o:'in',t:'Quiero una página para mostrar los productos',h:'09:50'},{o:'out',t:'Buenísimo. ¿Los productos cambian seguido o son fijos?',h:'09:52'},{o:'in',t:'Van cambiando por temporada',h:'09:55'},{o:'out',t:'Entonces te conviene un Sitio con catálogo. Te paso el detalle y el tiempo de entrega.',h:'09:57'},{o:'in',t:'Listo, transferí la seña',h:'10:15'}]},
+    {id:3, canal:'em', nombre:'Inmobiliaria Sur', ini:'IS', ultimo:'Prefiero hablar con Luca directamente', hora:'Ayer', estado:'humano', sinLeer:1,
+      msgs:[{o:'in',t:'Necesito algo para tasar propiedades rápido',h:'Ayer 17:20'},{o:'out',t:'Tenemos el ACM automatizado: scrapea los portales y arma el informe. ¿Querés que te lo explique?',h:'Ayer 17:22'},{o:'in',t:'Prefiero hablar con Luca directamente',h:'Ayer 17:25'}]},
+    {id:4, canal:'wa', nombre:'Gimnasio Fuerza', ini:'GF', ultimo:'(Vos estás atendiendo este chat)', hora:'Ayer', estado:'pausado', sinLeer:0,
+      msgs:[{o:'in',t:'Che, una consulta puntual sobre la factura',h:'Ayer 12:00'}]},
+  ],
+  crm:[
+    {nombre:'Panadería Rosales', contacto:'+54 9 351 555 0102', canal:'ig', quiere:'Sitio con catálogo', servicios:'Sitio Web con BD', total:500, modelo:'Compra', pago:'sena', pagado:250, saldo:250, entrega:'12–17 días háb.', estado:'Señado'},
+    {nombre:'Gimnasio Fuerza', contacto:'+54 9 351 555 0110', canal:'wa', quiere:'Atender WhatsApp y captar', servicios:'Combo Atención Total', total:850, modelo:'Compra', pago:'total', pagado:850, saldo:0, entrega:'Entregado', estado:'Entregado'},
+    {nombre:'Estudio Contable Vera', contacto:'vera@estudio.com', canal:'em', quiere:'Responder mails solos', servicios:'Respuesta de Emails', total:0, modelo:'—', pago:'no', pagado:0, saldo:0, entrega:'—', estado:'Presupuestado'},
+    {nombre:'Inmobiliaria Sur', contacto:'+54 9 351 555 0133', canal:'wa', quiere:'Tasaciones automáticas', servicios:'ACM Automatizado', total:650, modelo:'Compra', pago:'no', pagado:0, saldo:0, entrega:'—', estado:'Presupuestado'},
+    {nombre:'Kiosco 24hs Nuñez', contacto:'+54 9 351 555 0177', canal:'wa', quiere:'Registro de gastos', servicios:'Registro de Gastos WPP', total:280, modelo:'Compra', pago:'total', pagado:280, saldo:0, entrega:'Entregado', estado:'Cerrado'},
+  ],
+  leads:[
+    {fecha:'Hoy 11:38', nombre:'Estudio Contable Vera', contacto:'vera@estudio.com', canal:'em', interes:'Respuesta de Emails', score:8, prioridad:'normal'},
+    {fecha:'Hoy 09:50', nombre:'Panadería Rosales', contacto:'@panrosales', canal:'ig', interes:'Sitio con catálogo', score:9, prioridad:'alta'},
+    {fecha:'Ayer', nombre:'Inmobiliaria Sur', contacto:'+54 9 351 555 0133', canal:'wa', interes:'ACM', score:7, prioridad:'normal'},
+    {fecha:'Ayer', nombre:'Taller Gómez', contacto:'+54 9 351 555 0190', canal:'wa', interes:'Presupuestos', score:6, prioridad:'normal'},
+    {fecha:'2 días', nombre:'Coach Marina D.', contacto:'@marina.coach', canal:'ig', interes:'Agenda de turnos', score:5, prioridad:'normal'},
+  ],
+  agenda:[
+    {dia:'Mañana', hora:'15:30', nombre:'Inmobiliaria Sur', tema:'Dudas sobre el ACM'},
+    {dia:'Jue 18', hora:'11:00', nombre:'Estudio Contable Vera', tema:'Arranque respuesta de emails'},
+    {dia:'Vie 19', hora:'17:00', nombre:'Taller Gómez', tema:'Definir presupuesto'},
+  ],
+  reporte:{
+    contactaron:38, cerrados:13, conversion:34, llamadas:6,
+    posts:[
+      {txt:'Antes/después: bot que responde 24hs', alcance:4200, inter:310},
+      {txt:'Caso real: inmobiliaria tasando en minutos', alcance:3100, inter:190},
+      {txt:'Tip: 3 tareas que podés automatizar hoy', alcance:2600, inter:145},
+    ],
+    consejos:[
+      'WhatsApp sigue siendo tu mejor canal (58% de los contactos). Redoblá contenido que lleve a WPP.',
+      'Los posts de "antes/después" duplican la interacción: hacé uno por semana.',
+      'Tenés 3 leads con score alto sin cerrar — Redi ya les programó seguimiento.',
+    ]
+  }
+};
+const REDI_API = {
+  async resumen(){ return {kpis:DEMO.kpis, movimiento:DEMO.movimientoHoy, canal:DEMO.contactosCanal, semana:DEMO.semana, agenda:DEMO.agenda}; },
+  async conversaciones(){ return DEMO.conversaciones; },
+  async crm(){ return DEMO.crm; },
+  async leads(){ return DEMO.leads; },
+  async agenda(){ return DEMO.agenda; },
+  async reporte(){ return DEMO.reporte; },
+  // Chat con Redi (demo). Reemplazar por fetch a un webhook de n8n que hable con el agente.
+  async preguntarARedi(texto){
+    await new Promise(r=>setTimeout(r,650));
+    const t=texto.toLowerCase();
+    if(t.includes('saldo')||t.includes('cobrar')||t.includes('deben')) return 'Hoy tenés u$s 1.150 por cobrar. Panadería Rosales debe u$s 250 (seña paga, resta el 50%) e Inmobiliaria Sur todavía no señó. ¿Querés que les mande un recordatorio?';
+    if(t.includes('lead')) return 'Esta semana entraron 38 contactos: 22 por WhatsApp, 11 por Instagram y 5 por email. 13 cerraron (34% de conversión). Hay 3 leads con score alto sin cerrar; ya les programé seguimiento.';
+    if(t.includes('hoy')||t.includes('día')||t.includes('dia')) return 'Hoy: 1 lead nuevo (Estudio Contable Vera), 1 seña recibida (Panadería Rosales, u$s 170), 1 llamada agendada y 1 venta cerrada (Gimnasio Fuerza). Día positivo.';
+    if(t.includes('proyecto')||t.includes('curso')||t.includes('entrega')) return 'Tenés 2 proyectos en curso: Panadería Rosales (Sitio con catálogo, entrega 12–17 días) y Estudio Contable Vera arranca cuando mande los accesos. Con 2 en paralelo, los plazos se estiran al doble.';
+    return 'Estoy para ayudarte a llevar el control de RedLabs. Preguntame por los leads, los saldos por cobrar, el movimiento de hoy o los proyectos en curso.';
+  }
+};
+
+/* ================= ICONS ================= */
+const I = {
+  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+  inbox:'<path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13 6 5h12l2 8v6H4z"/>',
+  users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3.2 3.2 0 0 1 0 6"/><path d="M18 20a6 6 0 0 0-3-5.2"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".6" fill="currentColor"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>',
+  chart:'<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="14" width="3" height="3"/>',
+  spark:'<path d="M4 14.5 9 9l3.5 3L20 5"/><circle cx="20" cy="5" r="1.4" fill="currentColor" stroke="none"/>',
+  bolt:'<path d="M13 3 4 14h6l-1 7 9-11h-6l1-7Z"/>',
+  user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>',
+  dollar:'<path d="M12 3v18M8 8.5a3 3 0 0 1 3-2.5h2a2.6 2.6 0 0 1 .5 5.1l-3 .8A2.6 2.6 0 0 0 13 17h1.5a3 3 0 0 0 2.8-2"/>',
+  phone:'<path d="M6.5 4h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 6.2 2 2 0 0 1 6.5 4Z"/>',
+  check:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+  wa:'<path d="M4 20l1.3-4A8 8 0 1 1 8 18.7L4 20Z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5"/>',
+  ig:'<rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.4"/><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none"/>',
+  em:'<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/>',
+  send:'<path d="M4 12 20 5l-4 15-4-6-6-2Z"/>',
+  spark2:'<path d="M12 3v6M12 15v6M3 12h6M15 12h6"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/>',
+  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.5M12 18.5V21M4.2 4.2l1.8 1.8M18 18l1.8 1.8M3 12h2.5M18.5 12H21M4.2 19.8 6 18M18 6l1.8-1.8"/>',
+  pause:'<rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/>',
+  play:'<path d="M7 5l11 7-11 7z"/>',
+  hand:'<path d="M8 11V5.5a1.5 1.5 0 0 1 3 0V11M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6H10a5 5 0 0 1-4-2l-2.5-3.2a1.6 1.6 0 0 1 2.4-2L8 12"/>'
+};
+const svg = (p,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||1.7}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const chanIco = c => ({wa:I.wa, ig:I.ig, em:I.em}[c]||I.inbox);
+const chanName = c => ({wa:'WhatsApp', ig:'Instagram', em:'Email'}[c]||c);
+
+/* ================= NAV / ROUTER ================= */
+const ROUTES = [
+  {id:'resumen', label:'Resumen', icon:I.home, group:0},
+  {id:'bandeja', label:'Bandeja', icon:I.inbox, group:0, badge:3},
+  {id:'crm', label:'CRM Clientes', icon:I.users, group:1},
+  {id:'leads', label:'Leads', icon:I.target, group:1},
+  {id:'agenda', label:'Agenda', icon:I.cal, group:1},
+  {id:'reporte', label:'Reporte', icon:I.chart, group:2},
+  {id:'chat', label:'Chat con Redi', icon:I.bolt, group:2},
+  {id:'config', label:'Configuración', icon:I.gear, group:2},
+];
+const TITLES = {
+  resumen:['Resumen','Panel de control · RedLabs'],
+  bandeja:['Bandeja unificada','WhatsApp · Instagram · Email'],
+  crm:['CRM Clientes','Base de datos y control de pagos'],
+  leads:['Leads','Interesados captados por Redi'],
+  agenda:['Agenda','Llamadas coordinadas por Redi'],
+  reporte:['Reporte semanal','Métricas y recomendaciones'],
+  chat:['Chat con Redi','Preguntale lo que quieras sobre el negocio'],
+  config:['Configuración','Cómo trabaja Redi'],
+};
+function renderNav(active){
+  const groups={0:'Operación',1:'Clientes',2:'Inteligencia'};
+  let html=''; let lastG=-1;
+  ROUTES.forEach(r=>{
+    if(r.group!==lastG){ html+=`<div class="lbl">${groups[r.group]}</div>`; lastG=r.group; }
+    html+=`<a data-id="${r.id}" class="${r.id===active?'active':''}">${svg(r.icon)}<span>${r.label}</span>${r.badge?`<span class="badge">${r.badge}</span>`:''}</a>`;
+  });
+  const nav=document.getElementById('nav'); nav.innerHTML=html;
+  nav.querySelectorAll('a').forEach(a=>a.onclick=()=>go(a.dataset.id));
+}
+function go(id){
+  location.hash=id;
+  renderNav(id);
+  const [t,c]=TITLES[id]||['',''];
+  document.getElementById('pageTitle').textContent=t;
+  document.getElementById('pageCrumb').textContent=c;
+  document.getElementById('periodBtn').style.display = (id==='resumen'||id==='reporte')?'':'none';
+  document.getElementById('side').classList.remove('open');
+  VIEWS[id]();
+}
+
+/* ================= HELPERS ================= */
+const $view = ()=>document.getElementById('view');
+const money = n => 'u$s '+Number(n).toLocaleString('es-AR');
+const pagoChip = p => ({no:['crit','No pagó'], sena:['warn','Seña 50%'], total:['good','Pagado total']}[p]||['mute',p]);
+const estadoChip = e => {
+  const m={Presupuestado:'info',Señado:'warn','Esperando material':'warn','En curso':'info',Entregado:'good',Cerrado:'good',Perdido:'mute'};
+  return [m[e]||'mute', e];
+};
+function statusChip(s){
+  return {redi:['good','Redi atendiendo'], humano:['crit','Requiere humano'], pausado:['warn','En pausa (vos)']}[s]||['mute',s];
+}
+
+/* ================= VIEWS ================= */
+const VIEWS = {};
+
+VIEWS.resumen = async ()=>{
+  const d = await REDI_API.resumen();
+  const k=d.kpis;
+  const trend=(cur,prev)=>{ const up=cur>=prev; const pct=prev?Math.round((cur-prev)/prev*100):0; return `<b class="${up?'':'dn'}">${up?'▲':'▼'} ${Math.abs(pct)}%</b> vs. período previo`; };
+  const maxSem=Math.max(...d.semana.map(x=>x.v));
+  $view().innerHTML = `
+    <div class="kpis">
+      ${kpi(I.target,'Leads del mes', k.leadsMes, trend(k.leadsMes,k.leadsMesPrev))}
+      ${kpi(I.spark,'Conversión', k.conversion+'%', trend(k.conversion,k.conversionPrev))}
+      ${kpi(I.users,'Clientes activos', k.clientesActivos, 'En cartera hoy')}
+      ${kpi(I.dollar,'Por cobrar', money(k.saldos), 'Saldos pendientes')}
+    </div>
+    <div class="two" style="margin-top:16px">
+      <div class="card pad">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="section-title" style="margin:0">Contactos por día</div>
+          <span class="chip mute">Esta semana</span>
+        </div>
+        <div class="bars">
+          ${d.semana.map(x=>`<div class="b"><div class="bv tnum">${x.v}</div><div class="bar" style="height:${Math.max(8,x.v/maxSem*100)}%"></div><div class="bl">${x.l}</div></div>`).join('')}
+        </div>
+      </div>
+      <div class="card pad">
+        <div class="section-title">Movimiento de hoy</div>
+        ${d.movimiento.map(m=>`<div class="mini-it"><div class="mi-ico">${svg(I[m.ico]||I.spark)}</div><div><div class="mt">${m.t}</div><div class="md">${m.d}</div></div></div>`).join('')}
+      </div>
+    </div>
+    <div class="two" style="margin-top:16px">
+      <div class="card pad">
+        <div class="section-title">Contactos por canal</div>
+        ${d.canal.map(c=>{const tot=d.canal.reduce((a,b)=>a+b.v,0);const p=Math.round(c.v/tot*100);return `
+          <div style="margin:12px 0">
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span class="channel">${svg(chanIco(c.l==='WhatsApp'?'wa':c.l==='Instagram'?'ig':'em'))}${c.l}</span><span class="tnum" style="color:var(--muted)">${c.v} · ${p}%</span></div>
+            <div style="height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden"><div style="height:100%;width:${p}%;background:linear-gradient(90deg,var(--accent),#8f1512);border-radius:4px"></div></div>
+          </div>`;}).join('')}
+      </div>
+      <div class="card pad">
+        <div class="section-title">Próximas llamadas</div>
+        ${d.agenda.map(a=>`<div class="mini-it"><div class="mi-ico">${svg(I.phone)}</div><div><div class="mt">${a.nombre}</div><div class="md">${a.dia} ${a.hora} · ${a.tema}</div></div></div>`).join('')}
+      </div>
+    </div>`;
+};
+function kpi(icon,label,val,sub){
+  return `<div class="card kpi"><div class="k-top"><span>${label}</span><span class="k-ico">${svg(icon)}</span></div><div class="k-val tnum">${val}</div><div class="k-sub">${sub}</div></div>`;
+}
+
+let selConv = 1;
+VIEWS.bandeja = async ()=>{
+  const cs = await REDI_API.conversaciones();
+  const render=()=>{
+    const c = cs.find(x=>x.id===selConv) || cs[0];
+    $view().innerHTML = `<div class="inbox">
+      <div class="card pad conv-list">
+        <div class="section-title">Conversaciones</div>
+        <div class="list">
+          ${cs.map(x=>{const [sc,st]=statusChip(x.estado);return `
+            <div class="it ${x.id===selConv?'sel':''}" data-id="${x.id}">
+              <div class="avatar ${x.canal}">${x.ini}</div>
+              <div class="meta"><div class="nm">${x.nombre}</div><div class="ms">${x.ultimo}</div></div>
+              <div style="text-align:right"><div class="tm">${x.hora}</div>${x.sinLeer?`<span class="badge" style="position:static;display:inline-grid;margin-top:4px">${x.sinLeer}</span>`:`<span class="chip ${sc}" style="margin-top:4px;transform:scale(.85)"><span class="d" style="background:currentColor"></span></span>`}</div>
+            </div>`;}).join('')}
+        </div>
+      </div>
+      <div class="card thread">
+        <div class="th-head">
+          <div class="avatar ${c.canal}">${c.ini}</div>
+          <div style="flex:1"><div style="font-weight:650">${c.nombre}</div><div class="channel">${svg(chanIco(c.canal))}${chanName(c.canal)}</div></div>
+          ${(()=>{const[sc,st]=statusChip(c.estado);return `<span class="chip ${sc}"><span class="d" style="background:currentColor"></span>${st}</span>`;})()}
+          <button class="btn sm" id="pauseBtn">${c.estado==='pausado'?svg(I.play)+' Reactivar Redi':svg(I.pause)+' Pausar Redi'}</button>
+          <button class="btn sm ${c.estado==='humano'?'primary':''}" id="takeBtn">${svg(I.hand)} Tomar</button>
+        </div>
+        <div class="th-body">
+          ${c.msgs.map(m=>`<div class="bub ${m.o}">${m.t}<span class="bt">${m.h}</span></div>`).join('')}
+        </div>
+        <div class="th-foot">
+          <input class="inp" id="replyInp" placeholder="${c.estado==='pausado'?'Escribí vos (Redi está en pausa)…':'Escribir un mensaje…'}"/>
+          <button class="btn primary" id="replyBtn">${svg(I.send)} Enviar</button>
+        </div>
+      </div>
+    </div>`;
+    $view().querySelectorAll('.conv-list .it').forEach(it=>it.onclick=()=>{selConv=+it.dataset.id; render();});
+    const pb=document.getElementById('pauseBtn'); if(pb) pb.onclick=()=>{ c.estado = c.estado==='pausado'?'redi':'pausado'; render(); };
+    const tb=document.getElementById('takeBtn'); if(tb) tb.onclick=()=>{ c.estado='pausado'; render(); };
+    const send=()=>{const i=document.getElementById('replyInp'); if(!i.value.trim())return; c.msgs.push({o:'out',t:i.value.trim(),h:'ahora'}); c.estado='pausado'; render();};
+    const rb=document.getElementById('replyBtn'); if(rb) rb.onclick=send;
+    const ri=document.getElementById('replyInp'); if(ri) ri.onkeydown=e=>{if(e.key==='Enter')send();};
+  };
+  render();
+};
+
+VIEWS.crm = async ()=>{
+  const rows = await REDI_API.crm();
+  $view().innerHTML = `<div class="card">
+    <div class="twrap"><table>
+      <thead><tr><th>Cliente</th><th>Qué quiere</th><th>Servicio</th><th>Presupuesto</th><th>Pago</th><th>Pagado</th><th>Saldo</th><th>Entrega</th><th>Estado</th></tr></thead>
+      <tbody>${rows.map(r=>{const[pc,pt]=pagoChip(r.pago);const[ec,et]=estadoChip(r.estado);return `
+        <tr>
+          <td><div class="who">${r.nombre}</div><div class="sm2 channel">${svg(chanIco(r.canal))}${r.contacto}</div></td>
+          <td class="sm2">${r.quiere}</td>
+          <td>${r.servicios}</td>
+          <td class="tnum">${r.total?money(r.total):'—'}</td>
+          <td><span class="chip ${pc}">${pt}</span></td>
+          <td class="tnum">${r.pagado?money(r.pagado):'—'}</td>
+          <td class="tnum" style="${r.saldo>0?'color:var(--accent);font-weight:650':''}">${r.saldo>0?money(r.saldo):'—'}</td>
+          <td class="sm2">${r.entrega}</td>
+          <td><span class="chip ${ec}">${et}</span></td>
+        </tr>`;}).join('')}</tbody>
+    </table></div>
+  </div>
+  <div class="note" style="margin-top:14px">${svg(I.info)}<div>Redi carga y actualiza esta tabla sola desde las conversaciones. Es la misma base que vive en tu Google Sheet (<b>CRM Clientes</b>) — acá la ves ordenada y en la Etapa siguiente se sincroniza con Firestore.</div></div>`;
+};
+
+VIEWS.leads = async ()=>{
+  const rows = await REDI_API.leads();
+  $view().innerHTML = `<div class="card"><div class="twrap"><table>
+    <thead><tr><th>Fecha</th><th>Nombre</th><th>Contacto</th><th>Canal</th><th>Interés</th><th>Score</th><th>Prioridad</th></tr></thead>
+    <tbody>${rows.map(r=>`
+      <tr>
+        <td class="sm2">${r.fecha}</td>
+        <td class="who">${r.nombre}</td>
+        <td class="sm2">${r.contacto}</td>
+        <td><span class="channel">${svg(chanIco(r.canal))}${chanName(r.canal)}</span></td>
+        <td>${r.interes}</td>
+        <td class="tnum">${scoreBar(r.score)}</td>
+        <td>${r.prioridad==='alta'?'<span class="chip crit">Alta</span>':'<span class="chip mute">Normal</span>'}</td>
+      </tr>`).join('')}</tbody>
+  </table></div></div>`;
+};
+function scoreBar(s){
+  return `<span style="display:inline-flex;align-items:center;gap:8px"><span style="width:52px;height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden;display:inline-block"><span style="display:block;height:100%;width:${s*10}%;background:${s>=8?'var(--good)':s>=6?'var(--warn)':'var(--faint)'}"></span></span>${s}</span>`;
+}
+
+VIEWS.agenda = async ()=>{
+  const rows = await REDI_API.agenda();
+  $view().innerHTML = `<div class="card pad">
+    <div class="section-title">Próximas llamadas coordinadas por Redi</div>
+    <div class="list">
+      ${rows.map(a=>`<div class="it"><div class="mi-ico" style="width:40px;height:40px">${svg(I.phone)}</div>
+        <div class="meta"><div class="nm">${a.nombre}</div><div class="ms">${a.tema}</div></div>
+        <div style="text-align:right"><div style="font-weight:650">${a.dia}</div><div class="tm">${a.hora}</div></div></div>`).join('')}
+    </div></div>`;
+};
+
+VIEWS.reporte = async ()=>{
+  const r = await REDI_API.reporte();
+  const maxA=Math.max(...r.posts.map(p=>p.alcance));
+  $view().innerHTML = `
+    <div class="kpis">
+      ${kpi(I.user,'Contactaron', r.contactaron,'esta semana')}
+      ${kpi(I.check,'Cerrados', r.cerrados, r.conversion+'% de conversión')}
+      ${kpi(I.spark,'Conversión', r.conversion+'%','de contacto a cierre')}
+      ${kpi(I.phone,'Llamadas', r.llamadas,'agendadas')}
+    </div>
+    <div class="two" style="margin-top:16px">
+      <div class="card pad">
+        <div class="section-title">Publicaciones que más trajeron</div>
+        ${r.posts.map(p=>`<div style="margin:14px 0">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${p.txt}</span><span class="tnum" style="color:var(--muted)">${p.inter} inter.</span></div>
+          <div style="height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.round(p.alcance/maxA*100)}%;background:linear-gradient(90deg,var(--accent),#8f1512)"></div></div>
+          <div class="tm" style="margin-top:4px">${p.alcance.toLocaleString('es-AR')} de alcance</div>
+        </div>`).join('')}
+      </div>
+      <div class="card pad">
+        <div class="section-title">Consejos de Redi</div>
+        ${r.consejos.map(c=>`<div class="mini-it"><div class="mi-ico">${svg(I.bolt)}</div><div class="mt" style="font-weight:500;line-height:1.45">${c}</div></div>`).join('')}
+      </div>
+    </div>`;
+};
+
+let rediHist=[{o:'redi',t:'¡Hola Luca! Soy Redi. Te ayudo a llevar el control de RedLabs. Preguntame por los leads, los saldos por cobrar, el movimiento de hoy o los proyectos en curso.'}];
+VIEWS.chat = async ()=>{
+  const suger=['¿Cómo venimos hoy?','¿Cuánto tengo por cobrar?','¿Cómo vienen los leads?','¿Qué proyectos hay en curso?'];
+  const paint=()=>{
+    $view().innerHTML = `<div class="card redi-chat">
+      <div class="rc-body" id="rcBody">
+        ${rediHist.map(m=>m.o==='redi'
+          ? `<div class="redi-msg"><div class="ra">R</div><div class="rb">${m.t}</div></div>`
+          : `<div class="redi-msg me"><div class="rb">${m.t}</div></div>`).join('')}
+      </div>
+      <div class="suggest">${suger.map(s=>`<span class="s">${s}</span>`).join('')}</div>
+      <div class="rc-foot">
+        <input class="inp" id="rcInp" placeholder="Escribile a Redi…" autocomplete="off"/>
+        <button class="btn primary" id="rcSend">${svg(I.send)} Enviar</button>
+      </div>
+    </div>`;
+    const body=document.getElementById('rcBody'); body.scrollTop=body.scrollHeight;
+    const inp=document.getElementById('rcInp');
+    const ask=async(text)=>{
+      if(!text.trim())return;
+      rediHist.push({o:'me',t:text}); paint();
+      rediHist.push({o:'redi',t:'…'}); paint();
+      const ans=await REDI_API.preguntarARedi(text);
+      rediHist[rediHist.length-1]={o:'redi',t:ans}; paint();
+    };
+    document.getElementById('rcSend').onclick=()=>ask(inp.value);
+    inp.onkeydown=e=>{if(e.key==='Enter')ask(inp.value);};
+    $view().querySelectorAll('.suggest .s').forEach(s=>s.onclick=()=>ask(s.textContent));
+    inp.focus();
+  };
+  paint();
+};
+
+VIEWS.config = async ()=>{
+  $view().innerHTML = `
+  <div class="row">
+    <div class="card pad" style="flex:1;min-width:280px">
+      <div class="section-title">Fuente de precios</div>
+      <div class="def">
+        <div class="dk">Origen</div><div class="dv">Google Sheet · <b>Catálogo Servicios</b></div>
+        <div class="dk">Actualización</div><div class="dv">En tiempo real (Redi lee al cotizar)</div>
+        <div class="dk">Servicios</div><div class="dv">14 + vertical inmobiliaria · 7 combos · servicios web</div>
+      </div>
+    </div>
+    <div class="card pad" style="flex:1;min-width:280px">
+      <div class="section-title">Atención</div>
+      <div class="def">
+        <div class="dk">Disponibilidad</div><div class="dv">Redi responde 24/7</div>
+        <div class="dk">Horario humano</div><div class="dv">Lun a Vie · 09:00–19:00</div>
+        <div class="dk">Seña</div><div class="dv">50% por transferencia</div>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:16px">
+    <div class="card pad" style="flex:1;min-width:280px">
+      <div class="section-title">Motor de IA</div>
+      <div class="def">
+        <div class="dk">Conversación</div><div class="dv">GPT-4o · temperatura 0.3</div>
+        <div class="dk">Memoria</div><div class="dv">Persistente por contacto</div>
+        <div class="dk">Audios</div><div class="dv">Transcripción con Whisper</div>
+      </div>
+    </div>
+    <div class="card pad" style="flex:1;min-width:280px">
+      <div class="section-title">Chats en pausa</div>
+      <div class="list">
+        <div class="it"><div class="avatar wa">GF</div><div class="meta"><div class="nm">Gimnasio Fuerza</div><div class="ms">Lo estás atendiendo vos</div></div><button class="btn sm">${svg(I.play)} Reactivar</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:16px">${svg(I.info)}<div>Este panel corre con datos de ejemplo. Para conectarlo a tu operación real, se enlaza la capa de datos (<b>REDI_API</b>) con tus webhooks de n8n o con Firestore. Está todo comentado en el código, listo para el deploy en Firebase o Vercel.</div></div>`;
+};
+
+/* ================= THEME ================= */
+const themeBtn=document.getElementById('themeBtn');
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  try{localStorage.setItem('redi-theme',t);}catch(e){}
+  document.getElementById('themeIcon').innerHTML = t==='light'
+    ? '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.5 4.5l1.8 1.8M17.7 17.7l1.8 1.8M19.5 4.5l-1.8 1.8M6.3 17.7l-1.8 1.8"/>'
+    : '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>';
+}
+themeBtn.onclick=()=>setTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
+(function initTheme(){
+  let t='dark'; try{t=localStorage.getItem('redi-theme')|| (matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');}catch(e){}
+  setTheme(t);
+})();
+
+/* ================= BOOT ================= */
+const start=(location.hash||'#resumen').slice(1);
+go(ROUTES.find(r=>r.id===start)?start:'resumen');
+window.addEventListener('hashchange',()=>{const id=location.hash.slice(1); if(VIEWS[id]&&id!==currentId()) go(id);});
+function currentId(){return document.querySelector('.nav a.active')?.dataset.id;}
+</script>
+</body>
+</html>
