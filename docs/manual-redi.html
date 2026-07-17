@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Manual completo de Redi — Paso a paso</title>
+<style>
+  @page { margin: 20mm 18mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; font-size: 12pt; line-height: 1.55; color: #111; max-width: 820px; margin: 0 auto; }
+  h1 { font-size: 26pt; border-bottom: 4px solid #EE2B24; padding-bottom: 8px; }
+  h2 { font-size: 18pt; margin-top: 28px; color: #000; border-bottom: 1px solid #ccc; padding-bottom: 4px; page-break-after: avoid; }
+  h3 { font-size: 14pt; margin-top: 20px; color: #b3201b; page-break-after: avoid; }
+  p, li { font-size: 12pt; }
+  ol, ul { padding-left: 22px; }
+  li { margin: 5px 0; }
+  code, .url { font-family: "Courier New", monospace; font-size: 11pt; background: #f2f2f2; padding: 1px 5px; border-radius: 3px; word-break: break-all; }
+  .url { color: #0b57d0; }
+  .box { border: 1px solid #ccc; background: #fafafa; padding: 12px 16px; margin: 12px 0; border-radius: 5px; }
+  .warn { border-left: 5px solid #EE2B24; background: #fdeceb; padding: 10px 16px; margin: 12px 0; }
+  .tip { border-left: 5px solid #2e8b57; background: #eef7f1; padding: 10px 16px; margin: 12px 0; }
+  .step { background:#050403; color:#fff; border-radius:50%; display:inline-block; width:22px; height:22px; text-align:center; line-height:22px; font-family:sans-serif; font-size:11pt; margin-right:6px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 11pt; }
+  th, td { border: 1px solid #bbb; padding: 7px 9px; text-align: left; vertical-align: top; }
+  th { background: #050403; color: #fff; }
+  .toc a { color: #000; text-decoration: none; }
+  .pb { page-break-before: always; }
+  strong { color: #000; }
+  hr { border: none; border-top: 2px solid #eee; margin: 24px 0; }
+  .big { font-size: 13pt; }
+</style>
+</head>
+<body>
+
+<h1>Manual completo de Redi</h1>
+<p class="big"><strong>Guía paso a paso, para principiantes absolutos.</strong> Acá está TODO lo necesario para conectar a Redi: cómo crear cada cuenta, dónde sacar cada clave (API), qué copiar y dónde pegarlo. Seguí los pasos en orden, sin saltear ninguno.</p>
+
+<div class="tip">
+<strong>Cómo leer este manual:</strong> cada vez que veas una dirección web en <span class="url">azul</span>, la copiás y la pegás en la barra de tu navegador (arriba de todo, donde dice la dirección de la página) y apretás Enter. Cada vez que veas algo en <code>gris</code>, es un texto que tenés que copiar tal cual o pegar en algún lado.
+</div>
+
+<div class="warn">
+<strong>Importante antes de arrancar:</strong> este proceso lleva su tiempo (calculá 2 a 4 horas la primera vez, tranqui). No hace falta hacerlo todo de una: podés cortar y seguir después. Guardá TODAS las claves que vayas sacando en un documento aparte (un bloc de notas), porque las vas a necesitar. <strong>Nunca compartas esas claves con nadie ni las subas a internet.</strong>
+</div>
+
+<h2>Índice</h2>
+<div class="toc">
+<ol>
+<li>Qué es cada cosa (glosario rápido)</li>
+<li>Lista de cuentas que vas a necesitar</li>
+<li>Paso 1 — Preparar la planilla de Google (la base de datos de Redi)</li>
+<li>Paso 2 — Crear la cuenta de n8n (el cerebro que conecta todo)</li>
+<li>Paso 3 — Sacar la clave de OpenAI (la inteligencia / la IA)</li>
+<li>Paso 4 — Conectar Google (Sheets, Calendar, Gmail) en n8n</li>
+<li>Paso 5 — Crear la base de memoria (Supabase / Postgres)</li>
+<li>Paso 6 — WhatsApp con 360dialog</li>
+<li>Paso 7 — Instagram con Meta</li>
+<li>Paso 8 — Importar los flujos de Redi en n8n</li>
+<li>Paso 9 — Configurar el flujo principal (Redi — Cerebro)</li>
+<li>Paso 10 — Configurar los otros 3 flujos automáticos</li>
+<li>Paso 11 — Encender todo y probar</li>
+<li>Paso 12 — El panel de Redi (contraseña y logo)</li>
+<li>Problemas comunes y cómo resolverlos</li>
+</ol>
+</div>
+
+<hr>
+<h2>1. Qué es cada cosa (glosario rápido)</h2>
+<table>
+<tr><th>Palabra</th><th>Qué es, en criollo</th></tr>
+<tr><td><strong>API Key</strong> (o "clave", "token")</td><td>Es como una llave o contraseña que le das a Redi para que pueda usar un servicio en tu nombre (por ejemplo, mandar WhatsApp). Son textos largos y raros. Se copian y se pegan.</td></tr>
+<tr><td><strong>n8n</strong></td><td>El programa donde vive Redi. Ahí se arma el "circuito" que conecta WhatsApp, Instagram, la IA, la planilla, etc.</td></tr>
+<tr><td><strong>Flujo / Workflow</strong></td><td>Un "circuito" armado en n8n. Redi tiene 4: el cerebro, el seguimiento, el informe diario y el reporte semanal.</td></tr>
+<tr><td><strong>Nodo</strong></td><td>Cada "cajita" dentro de un flujo. Cada cajita hace una cosa.</td></tr>
+<tr><td><strong>Credencial</strong></td><td>En n8n, es donde se guarda una clave o un acceso para reusarlo. La cargás una vez y la elegís en cada nodo.</td></tr>
+<tr><td><strong>Webhook</strong></td><td>Una dirección web secreta que le das a WhatsApp o Instagram para que le "avisen" a Redi cuando llega un mensaje.</td></tr>
+<tr><td><strong>OpenAI</strong></td><td>La empresa que hace la inteligencia artificial (GPT) que usa Redi para entender y responder.</td></tr>
+</table>
+
+<h2>2. Lista de cuentas que vas a necesitar</h2>
+<p>Vas a crear (o ya tener) estas cuentas. Anotá el mail y la contraseña de cada una.</p>
+<table>
+<tr><th>Servicio</th><th>Para qué</th><th>¿Cuesta?</th></tr>
+<tr><td>Cuenta de Google (Gmail)</td><td>Planilla, Calendario, Mails</td><td>Gratis</td></tr>
+<tr><td>n8n</td><td>El cerebro de Redi</td><td>Prueba gratis; luego ~USD 20–24/mes (o la cuenta que ya uses)</td></tr>
+<tr><td>OpenAI</td><td>La IA</td><td>Se paga por uso (centavos por conversación). Necesita tarjeta.</td></tr>
+<tr><td>Supabase</td><td>La memoria de Redi</td><td>Gratis</td></tr>
+<tr><td>360dialog</td><td>WhatsApp</td><td>Aparte (lo paga el cliente): ~USD 5–15/mes</td></tr>
+<tr><td>Meta (Facebook)</td><td>Instagram</td><td>Gratis</td></tr>
+<tr><td>Apify (opcional)</td><td>Solo para inmobiliarias (tasaciones)</td><td>Gratis (plan free)</td></tr>
+</table>
+
+<div class="pb"></div>
+<h2>3. Paso 1 — Preparar la planilla de Google (la base de datos de Redi)</h2>
+<p>Redi lee y escribe todo en una sola planilla de Google. Vamos a usar la que ya tenés (<em>Centro de INFO RedLabs</em>) y le vamos a agregar unas pestañas.</p>
+
+<h3>3.1 Subir tu Excel a Google</h3>
+<ol>
+<li>Entrá a <span class="url">https://drive.google.com</span> con tu cuenta de Google.</li>
+<li>Arriba a la izquierda, clic en <strong>+ Nuevo</strong> → <strong>Subir archivo</strong>.</li>
+<li>Elegí tu archivo <code>Centro de INFO RedLabs.xlsx</code> y esperá a que suba.</li>
+<li>Cuando aparezca en la lista, hacé <strong>doble clic</strong> para abrirlo.</li>
+<li>Arriba dice "Archivo". Clic en <strong>Archivo → Guardar como Hojas de cálculo de Google</strong>. Esto crea una versión de Google (la que vamos a usar).</li>
+</ol>
+
+<h3>3.2 Agregar las pestañas que faltan</h3>
+<p>Abajo de todo, en la planilla, hay pestañas (como las de una carpeta). Vamos a crear estas <strong>5 pestañas nuevas</strong>. Para crear una: clic en el símbolo <strong>+</strong> abajo a la izquierda, y hacé doble clic en el nombre para renombrarla.</p>
+<p>Creá estas pestañas con EXACTAMENTE estos nombres, y en la <strong>primera fila (fila 1)</strong> de cada una, escribí estos títulos, cada uno en una columna (A, B, C...):</p>
+
+<table>
+<tr><th>Nombre de la pestaña</th><th>Títulos en la fila 1 (uno por columna)</th></tr>
+<tr><td><code>Leads</code></td><td>fecha · nombre · contacto · canal · interes · resumen · score · prioridad · estado · ultimo_seguimiento · variante</td></tr>
+<tr><td><code>Agenda</code></td><td>fecha_hora · nombre · contacto · tema · estado</td></tr>
+<tr><td><code>CRM Clientes</code></td><td>fecha_alta · nombre · contacto · canal · que_quiere · servicios · presupuesto_total · detalle_presupuesto · modelo · pago_estado · monto_pagado · fecha_pago · saldo_pendiente · fecha_entrega_estimada · estado_proyecto · notas · encuesta_mes</td></tr>
+<tr><td><code>Base Conocimiento</code></td><td>pregunta · respuesta · categoria</td></tr>
+<tr><td><code>Pausas</code></td><td>contacto · motivo</td></tr>
+</table>
+
+<div class="tip"><strong>La pestaña "Catálogo Servicios"</strong> ya la tenés (viene de tu Excel). No la toques: Redi lee los precios de ahí. Si querés cambiar un precio, lo cambiás ahí y Redi lo usa al toque.</div>
+
+<h3>3.3 Copiar el "ID" de la planilla (lo vas a usar mil veces)</h3>
+<ol>
+<li>Con la planilla abierta, mirá la dirección web arriba. Es algo así:<br>
+<code>https://docs.google.com/spreadsheets/d/<strong>1A2B3C4d5E6f7G8h9I0jKlMnOpQrStUvWxYz</strong>/edit#gid=0</code></li>
+<li>El <strong>ID</strong> es el texto largo que está <strong>entre <code>/d/</code> y <code>/edit</code></strong> (en el ejemplo, lo que está en negrita).</li>
+<li>Seleccionalo, copialo (Ctrl+C) y pegalo en tu bloc de notas con el título <strong>"ID DE LA PLANILLA"</strong>. Lo vas a necesitar en casi todos los nodos.</li>
+</ol>
+
+<div class="pb"></div>
+<h2>4. Paso 2 — Crear la cuenta de n8n</h2>
+<div class="tip">Si ya tenés acceso a una cuenta de n8n (por ejemplo, la que te comparten), saltéate la creación y solo iniciá sesión. Igual leé el resto.</div>
+<ol>
+<li>Entrá a <span class="url">https://n8n.io</span> y clic en <strong>Get started</strong> (o <strong>Sign up</strong>).</li>
+<li>Elegí <strong>n8n Cloud</strong> (es la más fácil, no hay que instalar nada).</li>
+<li>Registrate con tu mail. Confirmá el mail si te lo pide.</li>
+<li>Te va a crear un espacio con una dirección propia, algo como <code>https://tunombre.app.n8n.cloud</code>. <strong>Guardá esa dirección</strong> en tu bloc de notas: es la puerta de entrada a Redi.</li>
+<li>Cuando entrás, vas a ver un tablero vacío. Ahí vamos a importar los flujos más adelante.</li>
+</ol>
+
+<h2>5. Paso 3 — Sacar la clave de OpenAI (la IA)</h2>
+<ol>
+<li>Entrá a <span class="url">https://platform.openai.com/signup</span> y creá una cuenta (o iniciá sesión si ya tenés).</li>
+<li>Una vez adentro, primero cargá saldo/tarjeta: entrá a <span class="url">https://platform.openai.com/settings/organization/billing/overview</span> → <strong>Add payment details</strong> → cargá una tarjeta y un monto chico (con USD 5–10 arranca de sobra).</li>
+<li>Ahora sacá la clave: entrá a <span class="url">https://platform.openai.com/api-keys</span>.</li>
+<li>Clic en <strong>+ Create new secret key</strong>. Ponele un nombre (ej: <code>Redi</code>) y clic en <strong>Create</strong>.</li>
+<li>Te va a mostrar una clave larga que empieza con <code>sk-...</code>. <strong>Copiala YA</strong> (después no se puede volver a ver) y pegala en tu bloc de notas con el título <strong>"CLAVE OPENAI"</strong>.</li>
+</ol>
+<div class="warn">Esta clave es plata: cualquiera que la tenga puede gastar de tu cuenta. Nunca la pegues en un mail, un chat, ni en una página web pública.</div>
+<div class="tip">Si vas a usar la cuenta de n8n con OpenAI ya incluido (la compartida), quizás no necesites esta clave. Igual, tener la tuya te hace independiente.</div>
+
+<div class="pb"></div>
+<h2>6. Paso 4 — Conectar Google en n8n</h2>
+<p>Redi necesita permiso para usar tu Planilla, tu Calendario y tus Mails. En n8n Cloud esto es fácil: se hace con el botón "Iniciar sesión con Google".</p>
+<ol>
+<li>En n8n, arriba a la izquierda, clic en <strong>Overview</strong> y después en el menú <strong>Credentials</strong> (Credenciales). O entrá directo a <code>tunombre.app.n8n.cloud/home/credentials</code>.</li>
+<li>Clic en <strong>Add credential</strong> (Agregar credencial).</li>
+<li>En el buscador escribí <strong>Google Sheets</strong> y elegí <strong>Google Sheets OAuth2 API</strong>.</li>
+<li>Clic en el botón <strong>Sign in with Google</strong> (Iniciar sesión con Google).</li>
+<li>Se abre una ventana de Google: elegí tu cuenta, y en la pantalla de permisos clic en <strong>Permitir / Continuar</strong> hasta el final.</li>
+<li>Cuando vuelve a n8n y dice <strong>Account connected</strong> (Cuenta conectada), clic en <strong>Save</strong> (Guardar). Ponele de nombre <code>Google Redi</code>.</li>
+<li><strong>Repetí lo mismo</strong> para <strong>Google Calendar OAuth2 API</strong> y para <strong>Gmail OAuth2 API</strong> (mismo botón, misma cuenta de Google). Guardá cada una.</li>
+</ol>
+<div class="tip">Con esas 3 credenciales de Google ya cubrís planilla, agenda y mails. Más adelante, en cada nodo, vas a "elegir" cuál usar de una lista.</div>
+
+<div class="box"><strong>¿Y si n8n te pide un "Client ID" y "Client Secret" de Google?</strong> Eso pasa en instalaciones avanzadas (no en n8n Cloud). Si te pasa, avisame y te paso los pasos de Google Cloud Console aparte. En n8n Cloud alcanza con el botón "Sign in with Google".</div>
+
+<h2>7. Paso 5 — Crear la memoria de Redi (Supabase)</h2>
+<p>Para que Redi recuerde conversaciones anteriores, necesita una base de datos. Usamos Supabase, que es gratis.</p>
+<ol>
+<li>Entrá a <span class="url">https://supabase.com</span> y clic en <strong>Start your project</strong>. Registrate (podés usar tu cuenta de GitHub o el mail).</li>
+<li>Clic en <strong>New project</strong>.</li>
+<li>Ponele un nombre (ej: <code>redi-memoria</code>).</li>
+<li>En <strong>Database Password</strong>, poné una contraseña y <strong>guardala</strong> en tu bloc de notas como <strong>"CLAVE BASE SUPABASE"</strong>. La vas a necesitar.</li>
+<li>Elegí una región cercana (ej: <em>South America (São Paulo)</em>) y clic en <strong>Create new project</strong>. Esperá 1–2 minutos a que se cree.</li>
+<li>Cuando esté listo, entrá a <strong>Settings</strong> (el engranaje, abajo a la izquierda) → <strong>Database</strong>.</li>
+<li>Buscá la sección <strong>Connection info / Connection parameters</strong>. Anotá en tu bloc de notas estos 5 datos:
+  <ul>
+    <li><strong>Host</strong> (algo como <code>db.xxxxx.supabase.co</code>)</li>
+    <li><strong>Database name</strong> (normalmente <code>postgres</code>)</li>
+    <li><strong>Port</strong> (normalmente <code>5432</code>)</li>
+    <li><strong>User</strong> (normalmente <code>postgres</code>)</li>
+    <li><strong>Password</strong> (la que pusiste recién)</li>
+  </ul>
+</li>
+</ol>
+<p>Ahora cargá esto en n8n como credencial:</p>
+<ol>
+<li>En n8n → <strong>Credentials</strong> → <strong>Add credential</strong> → buscá <strong>Postgres</strong>.</li>
+<li>Completá: <strong>Host</strong>, <strong>Database</strong>, <strong>User</strong>, <strong>Password</strong>, <strong>Port</strong> con los 5 datos de arriba.</li>
+<li>En <strong>SSL</strong>, elegí <strong>Require / Allow</strong> (Supabase pide conexión segura).</li>
+<li>Clic en <strong>Save</strong>. Ponele de nombre <code>Postgres Redi</code>.</li>
+</ol>
+
+<div class="pb"></div>
+<h2>8. Paso 6 — WhatsApp con 360dialog</h2>
+<div class="warn">Este es el paso más largo y burocrático (es WhatsApp "oficial" para empresas). Tomate tu tiempo. Vas a necesitar un <strong>número de teléfono que NO esté usado en la app normal de WhatsApp</strong> (o darlo de baja de la app antes).</div>
+<ol>
+<li>Entrá a <span class="url">https://hub.360dialog.com/lp/whatsapp</span> (o <span class="url">https://www.360dialog.com</span> → Sign up).</li>
+<li>Creá tu cuenta con mail y contraseña. Confirmá el mail.</li>
+<li>Dentro del panel, clic en <strong>Connect / Add WhatsApp number</strong> (Conectar número).</li>
+<li>Te va a pedir conectar con <strong>Facebook</strong>: seguí los pasos, iniciá sesión con la cuenta de Facebook del negocio.</li>
+<li>Vas a tener que <strong>verificar el número</strong>: 360dialog manda un código por SMS o llamada al número que elegiste. Ponés el código.</li>
+<li>Puede pedir <strong>verificar el negocio</strong> (Business Verification de Facebook). Si aparece, seguí los pasos (nombre del negocio, etc.). A veces tarda unas horas en aprobarse.</li>
+<li>Cuando el número quede <strong>conectado</strong>, andá a <strong>Settings</strong> → <strong>API Key</strong> y clic en <strong>Generate / Copy</strong>.</li>
+<li>Copiá esa clave y guardala en tu bloc como <strong>"CLAVE 360DIALOG"</strong>.</li>
+<li>Anotá también el <strong>número de WhatsApp</strong> que conectaste, en formato internacional y <strong>sin el signo +</strong>. Ejemplo: si es +54 9 351 123 4567, se escribe <code>5493511234567</code>. Guardalo como <strong>"NUMERO WHATSAPP REDI"</strong>.</li>
+</ol>
+<div class="tip">También necesitás <strong>tu número personal</strong> (el de Luca) en el mismo formato sin +, para que Redi te avise cuando deriva un caso o te manda los reportes. Guardalo como <strong>"MI NUMERO (LUCA)"</strong>.</div>
+
+<h2>9. Paso 7 — Instagram con Meta</h2>
+<div class="warn">Para esto necesitás: una <strong>Página de Facebook</strong> del negocio, y una <strong>cuenta de Instagram tipo Empresa/Business</strong> vinculada a esa página. Si no las tenés, primero creá la página en <span class="url">https://facebook.com/pages/create</span> y pasá tu Instagram a cuenta de empresa desde la app de Instagram (Configuración → Cuenta → Cambiar a cuenta profesional).</div>
+<ol>
+<li>Entrá a <span class="url">https://developers.facebook.com</span> y clic en <strong>Get Started / Comenzar</strong> (iniciá sesión con tu Facebook).</li>
+<li>Arriba a la derecha, <strong>My Apps</strong> → <strong>Create App</strong> (Crear aplicación).</li>
+<li>En el tipo de app elegí <strong>Business</strong> (Negocios). Ponele un nombre (ej: <code>Redi RedLabs</code>) y creala.</li>
+<li>En el panel de la app, en <strong>Add products</strong> (Agregar productos), buscá <strong>Instagram</strong> (o <strong>Messenger</strong>) y clic en <strong>Set up</strong>.</li>
+<li>Seguí los pasos para <strong>vincular tu Página de Facebook</strong> y tu <strong>cuenta de Instagram Business</strong>.</li>
+<li>Ahora generá el <strong>Page Access Token</strong> (la clave). En la sección de la herramienta (Messenger/Instagram → Settings), buscá <strong>Access Tokens</strong>, elegí tu página y clic en <strong>Generate token</strong>.</li>
+<li>Copiá ese token largo y guardalo como <strong>"TOKEN META (PAGE ACCESS TOKEN)"</strong>.</li>
+<li>Anotá también el <strong>ID de tu cuenta de Instagram Business</strong> (aparece en las herramientas de la app, o en <span class="url">https://business.facebook.com</span> → Configuración → Cuentas de Instagram). Guardalo como <strong>"ID INSTAGRAM"</strong>.</li>
+</ol>
+<div class="tip">Este paso es el más enredado de todos. Si te trabás en algún punto, sacá una captura de pantalla de dónde estás y mandámela, y te digo exactamente qué apretar.</div>
+
+<div class="pb"></div>
+<h2>10. Paso 8 — Importar los flujos de Redi en n8n</h2>
+<p>Los 4 flujos están en tu repositorio, en la carpeta <code>n8n</code>. Son 4 archivos que terminan en <code>.json</code>:</p>
+<ul>
+<li><code>redi-cerebro.json</code> — el principal (atiende y cotiza)</li>
+<li><code>redi-seguimiento.json</code> — seguimiento y encuestas</li>
+<li><code>redi-informe-diario.json</code> — el resumen del día</li>
+<li><code>redi-reporte-semanal.json</code> — el reporte de los viernes</li>
+</ul>
+<h3>Cómo bajar cada archivo desde GitHub</h3>
+<ol>
+<li>Entrá a <span class="url">https://github.com/vzluca/Redi/tree/main/n8n</span>.</li>
+<li>Clic en el archivo (ej: <code>redi-cerebro.json</code>).</li>
+<li>Arriba a la derecha del recuadro del archivo, clic en el botón <strong>Download raw file</strong> (el ícono de la flechita hacia abajo). Se guarda en tu computadora.</li>
+<li>Repetí con los otros 3.</li>
+</ol>
+<h3>Cómo importarlos en n8n</h3>
+<ol>
+<li>En n8n, arriba a la derecha, clic en <strong>Create Workflow</strong> (o el botón <strong>+</strong>).</li>
+<li>En la nueva pantalla, clic en los <strong>tres puntitos (⋯)</strong> arriba a la derecha → <strong>Import from File</strong> (Importar desde archivo).</li>
+<li>Elegí <code>redi-cerebro.json</code>. Se va a dibujar todo el circuito con sus cajitas.</li>
+<li>Repetí (nuevo workflow → importar) con los otros 3 archivos.</li>
+</ol>
+
+<h2>11. Paso 9 — Configurar el flujo principal (Redi — Cerebro)</h2>
+<p>Abrí el flujo <strong>"Redi — Cerebro"</strong>. Vamos cajita por cajita. Para editar una cajita, le hacés <strong>doble clic</strong>.</p>
+
+<h3>11.1 Pegar el "cerebro" (el system prompt)</h3>
+<ol>
+<li>Bajá el texto del cerebro desde <span class="url">https://github.com/vzluca/Redi/blob/main/brain/redi-system-prompt.md</span> (botón <strong>Download raw file</strong>, o copialo directo de la pantalla).</li>
+<li>En el flujo, doble clic en la cajita <strong>"Redi (AI Agent)"</strong>.</li>
+<li>Buscá el campo <strong>System Message</strong> (Mensaje de sistema). Borrá el texto de ejemplo que hay y <strong>pegá TODO el contenido</strong> del archivo.</li>
+<li><strong>Importante:</strong> dentro de ese texto, donde habla de la <strong>seña por transferencia</strong>, reemplazá <code>PEGAR_ALIAS_O_LINK_DE_TRANSFERENCIA</code> por tu <strong>alias o CBU/CVU</strong> real. Así Redi lo pasa cuando corresponde.</li>
+<li>Cerrá la cajita (queda guardado).</li>
+</ol>
+
+<h3>11.2 Elegir las credenciales (las conexiones que creaste)</h3>
+<p>En estas cajitas, arriba vas a ver un campo <strong>Credential to connect with</strong> (Credencial). Clic ahí y elegí la que corresponde de la lista:</p>
+<table>
+<tr><th>Cajita (nodo)</th><th>Credencial que elegís</th></tr>
+<tr><td>GPT-4o (temp 0.3, 550 tok)</td><td>Tu credencial de OpenAI</td></tr>
+<tr><td>Transcribir Audio (Whisper)</td><td>Tu credencial de OpenAI</td></tr>
+<tr><td>Memoria persistente (Postgres)</td><td>Postgres Redi</td></tr>
+<tr><td>Consultar_Catalogo, Consultar_BaseConocimiento, Ver_Proyectos_En_Curso, Guardar_Lead, Cargar_CRM, Actualizar_Pago</td><td>Google Redi (Sheets)</td></tr>
+<tr><td>Agendar_Llamada</td><td>Google Redi (Calendar)</td></tr>
+<tr><td>Responder Email / Email In (Gmail)</td><td>Google Redi (Gmail)</td></tr>
+</table>
+<div class="box">Si al elegir la credencial de OpenAI todavía no la creaste: clic en <strong>Create new credential</strong>, pegá tu <strong>CLAVE OPENAI</strong> (la <code>sk-...</code>) y guardá.</div>
+
+<h3>11.3 Poner el ID de la planilla en cada cajita de Google Sheets</h3>
+<p>En cada una de estas cajitas hay un campo <strong>Document / Spreadsheet</strong> donde dice <code>PEGAR_ID_DEL_SHEET</code>. Cambialo por tu <strong>ID DE LA PLANILLA</strong>:</p>
+<ul>
+<li>Consultar_Catalogo, Consultar_BaseConocimiento, Ver_Proyectos_En_Curso, Guardar_Lead, Cargar_CRM, Actualizar_Pago.</li>
+</ul>
+<p>Al elegir la credencial de Google, muchas veces te deja elegir la planilla de una <strong>lista desplegable</strong> en vez de pegar el ID — mejor todavía. Y después, en <strong>Sheet</strong>, elegí la pestaña correcta (Catálogo Servicios, Base Conocimiento, CRM Clientes, Leads, según la cajita).</p>
+
+<h3>11.4 Poner las claves de WhatsApp e Instagram</h3>
+<p>Estas cajitas mandan mensajes. Hay que reemplazar los textos de ejemplo:</p>
+<table>
+<tr><th>Cajita</th><th>Qué reemplazar</th><th>Por</th></tr>
+<tr><td>Responder WhatsApp</td><td><code>PEGAR_API_KEY_360</code></td><td>Tu CLAVE 360DIALOG</td></tr>
+<tr><td>Derivar_a_Humano</td><td><code>PEGAR_API_KEY_360_DE_LUCA</code><br>y <code>NUMERO_DE_LUCA</code></td><td>Tu CLAVE 360DIALOG<br>y MI NUMERO (LUCA)</td></tr>
+<tr><td>Responder Instagram</td><td><code>PEGAR_PAGE_ACCESS_TOKEN</code></td><td>Tu TOKEN META</td></tr>
+</table>
+<p>Para editar: doble clic en la cajita → buscá el campo <strong>Header Parameters</strong> (donde está la clave) o el campo del cuerpo (Body) donde aparece el número, y reemplazá el texto de ejemplo.</p>
+
+<h3>11.5 Conectar los webhooks (para que lleguen los mensajes)</h3>
+<p><strong>WhatsApp:</strong></p>
+<ol>
+<li>Doble clic en la cajita <strong>"WhatsApp In (360dialog)"</strong>. Vas a ver una dirección web (<strong>Production URL</strong>). Copiala.</li>
+<li>Entrá al panel de 360dialog → <strong>Settings → Webhook</strong> → pegá esa dirección → <strong>Save</strong>.</li>
+</ol>
+<p><strong>Instagram:</strong></p>
+<ol>
+<li>Doble clic en la cajita <strong>"Instagram In (Meta)"</strong> y copiá su dirección web.</li>
+<li>En <span class="url">https://developers.facebook.com</span> → tu app → producto <strong>Instagram/Messenger → Webhooks</strong> → <strong>Add Callback URL</strong>: pegá la dirección, poné un <strong>Verify Token</strong> cualquiera (una palabra que inventes) y suscribite a los mensajes.</li>
+</ol>
+<p><strong>Mails:</strong> la cajita <strong>"Email In (Gmail)"</strong> no necesita webhook: funciona sola con la credencial de Gmail.</p>
+
+<div class="pb"></div>
+<h2>12. Paso 10 — Configurar los otros 3 flujos</h2>
+<p>En cada uno, hacé lo mismo que en el cerebro: elegí las credenciales de Google y reemplazá los textos de ejemplo.</p>
+<table>
+<tr><th>Flujo</th><th>Qué reemplazar</th></tr>
+<tr><td><strong>redi-seguimiento</strong> (corre 10:00)</td><td><code>PEGAR_ID_DEL_SHEET</code> (por el ID) · <code>PEGAR_API_KEY_360</code> (por la clave 360dialog) · credencial de Google.</td></tr>
+<tr><td><strong>redi-informe-diario</strong> (corre 20:00)</td><td><code>PEGAR_ID_DEL_SHEET</code> · <code>PEGAR_API_KEY_360</code> · <code>NUMERO_DE_LUCA</code> · credencial de Google.</td></tr>
+<tr><td><strong>redi-reporte-semanal</strong> (viernes 18:00)</td><td><code>PEGAR_ID_DEL_SHEET</code> · <code>PEGAR_API_KEY_360</code> · <code>NUMERO_DE_LUCA</code> · credencial de Google/Gmail. Para los datos de Instagram: <code>PEGAR_INSTAGRAM_BUSINESS_ID</code> (por tu ID INSTAGRAM) y <code>PEGAR_PAGE_ACCESS_TOKEN</code> (por tu TOKEN META). Si no ponés lo de Instagram, el reporte igual funciona, sin la parte de publicaciones.</td></tr>
+</table>
+
+<h2>13. Paso 11 — Encender todo y probar</h2>
+<ol>
+<li>Abrí cada uno de los 4 flujos y, arriba a la derecha, poné el interruptor en <strong>Active</strong> (Activo). Los 4 tienen que quedar activos.</li>
+<li><strong>Probá WhatsApp:</strong> desde otro teléfono, mandale un mensaje al número de Redi: <em>"Hola, quiero mejorar mi negocio pero no sé bien qué necesito"</em>. Redi debería hacerte preguntas, y después darte un precio con desglose.</li>
+<li><strong>Probá un audio:</strong> mandale un audio corto. Debería entenderlo igual.</li>
+<li><strong>Probá el paso a humano:</strong> escribí <em>"quiero hablar con una persona"</em>. Te debería llegar un aviso a tu WhatsApp (el de Luca).</li>
+<li><strong>Revisá la planilla:</strong> fijate que en la pestaña <strong>Leads</strong> aparezca la consulta que hiciste.</li>
+</ol>
+<div class="tip">Si algo no responde, abrí el flujo en n8n y mirá si alguna cajita quedó en rojo o con un cartelito de error. Casi siempre es una credencial sin elegir o un <code>PEGAR_...</code> que quedó sin reemplazar.</div>
+
+<h2>14. Paso 12 — El panel de Redi (contraseña y logo)</h2>
+<p>Tu panel ya está en Vercel (<span class="url">https://redlabs-panel.vercel.app</span>). Para que pida contraseña:</p>
+<ol>
+<li>Entrá a <span class="url">https://vercel.com</span> → tu proyecto <strong>redlabs-panel</strong> → <strong>Settings</strong>.</li>
+<li>Menú <strong>Environments</strong> → clic en <strong>Production</strong> → sección <strong>Environment Variables</strong> → <strong>Create</strong>. Creá dos:
+  <ul>
+    <li><code>PANEL_USER</code> = el usuario que quieras (ej: <code>luca</code>)</li>
+    <li><code>PANEL_PASS</code> = una contraseña larga y privada</li>
+  </ul>
+  (si te deja tildar los 3 entornos, tildalos)</li>
+<li>Andá a <strong>Deployments</strong> → el de arriba → menú <strong>⋯</strong> → <strong>Redeploy</strong>.</li>
+<li>Entrá a <span class="url">https://redlabs-panel.vercel.app</span>: te va a pedir usuario y contraseña, con tu logo arriba.</li>
+</ol>
+
+<div class="pb"></div>
+<h2>15. Problemas comunes y cómo resolverlos</h2>
+<table>
+<tr><th>Problema</th><th>Solución</th></tr>
+<tr><td>Una cajita en n8n queda en rojo</td><td>Doble clic → arriba dice el error. Casi siempre falta elegir la credencial o quedó un <code>PEGAR_...</code> sin reemplazar.</td></tr>
+<tr><td>Redi no responde el WhatsApp</td><td>Revisá que el flujo esté <strong>Active</strong>, que el webhook esté pegado en 360dialog, y que la CLAVE 360DIALOG esté bien en la cajita "Responder WhatsApp".</td></tr>
+<tr><td>Dice error de OpenAI o "quota"</td><td>Te quedaste sin saldo en OpenAI. Cargá un poco más en <span class="url">https://platform.openai.com/settings/organization/billing/overview</span>.</td></tr>
+<tr><td>No recuerda conversaciones</td><td>Revisá la credencial <strong>Postgres Redi</strong> (host, contraseña, SSL en Require).</td></tr>
+<tr><td>El panel dice "Panel bloqueado"</td><td>Faltan las variables <code>PANEL_USER</code> / <code>PANEL_PASS</code> en Vercel, o no hiciste Redeploy.</td></tr>
+<tr><td>Los precios están mal</td><td>Se cambian en la pestaña <strong>Catálogo Servicios</strong> de la planilla. Redi los lee de ahí.</td></tr>
+</table>
+
+<div class="tip big">
+<strong>¿Te trabaste en algún punto?</strong> Sacá una captura de pantalla exacta de dónde estás y mandámela. Te digo puntualmente qué botón apretar. No hace falta que sepas nada de programación: es todo copiar, pegar y elegir de listas.
+</div>
+
+<hr>
+<p style="text-align:center; color:#777; font-size:10pt;">Manual de Redi — RedLabs · Guardá tus claves en un lugar seguro y privado.</p>
+
+</body>
+</html>
