@@ -1,0 +1,31 @@
+# Secretos / credenciales — NUNCA subir
+.env
+.env.*
+*.env
+secrets.json
+credentials.json
+service-account*.json
+*-key.json
+*.pem
+*.key
+
+# n8n
+.n8n/
+
+# Firebase / Vercel
+.firebase/
+.firebaserc
+firebase-debug.log
+.vercel/
+
+# Dependencias / build
+node_modules/
+dist/
+build/
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
