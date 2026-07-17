@@ -414,6 +414,8 @@ function go(id){
 
 /* ================= HELPERS ================= */
 const $view = ()=>document.getElementById('view');
+// Escapa TODO texto que venga de clientes/afuera antes de meterlo en el DOM (anti-XSS).
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n => 'u$s '+Number(n).toLocaleString('es-AR');
 const pagoChip = p => ({no:['crit','No pagó'], sena:['warn','Seña 50%'], total:['good','Pagado total']}[p]||['mute',p]);
 const estadoChip = e => {
@@ -451,7 +453,7 @@ VIEWS.resumen = async ()=>{
       </div>
       <div class="card pad">
         <div class="section-title">Movimiento de hoy</div>
-        ${d.movimiento.map(m=>`<div class="mini-it"><div class="mi-ico">${svg(I[m.ico]||I.spark)}</div><div><div class="mt">${m.t}</div><div class="md">${m.d}</div></div></div>`).join('')}
+        ${d.movimiento.map(m=>`<div class="mini-it"><div class="mi-ico">${svg(I[m.ico]||I.spark)}</div><div><div class="mt">${esc(m.t)}</div><div class="md">${esc(m.d)}</div></div></div>`).join('')}
       </div>
     </div>
     <div class="two" style="margin-top:16px">
@@ -465,7 +467,7 @@ VIEWS.resumen = async ()=>{
       </div>
       <div class="card pad">
         <div class="section-title">Próximas llamadas</div>
-        ${d.agenda.map(a=>`<div class="mini-it"><div class="mi-ico">${svg(I.phone)}</div><div><div class="mt">${a.nombre}</div><div class="md">${a.dia} ${a.hora} · ${a.tema}</div></div></div>`).join('')}
+        ${d.agenda.map(a=>`<div class="mini-it"><div class="mi-ico">${svg(I.phone)}</div><div><div class="mt">${esc(a.nombre)}</div><div class="md">${esc(a.dia)} ${esc(a.hora)} · ${esc(a.tema)}</div></div></div>`).join('')}
       </div>
     </div>`;
 };
@@ -484,22 +486,22 @@ VIEWS.bandeja = async ()=>{
         <div class="list">
           ${cs.map(x=>{const [sc,st]=statusChip(x.estado);return `
             <div class="it ${x.id===selConv?'sel':''}" data-id="${x.id}">
-              <div class="avatar ${x.canal}">${x.ini}</div>
-              <div class="meta"><div class="nm">${x.nombre}</div><div class="ms">${x.ultimo}</div></div>
+              <div class="avatar ${x.canal}">${esc(x.ini)}</div>
+              <div class="meta"><div class="nm">${esc(x.nombre)}</div><div class="ms">${esc(x.ultimo)}</div></div>
               <div style="text-align:right"><div class="tm">${x.hora}</div>${x.sinLeer?`<span class="badge" style="position:static;display:inline-grid;margin-top:4px">${x.sinLeer}</span>`:`<span class="chip ${sc}" style="margin-top:4px;transform:scale(.85)"><span class="d" style="background:currentColor"></span></span>`}</div>
             </div>`;}).join('')}
         </div>
       </div>
       <div class="card thread">
         <div class="th-head">
-          <div class="avatar ${c.canal}">${c.ini}</div>
-          <div style="flex:1"><div style="font-weight:650">${c.nombre}</div><div class="channel">${svg(chanIco(c.canal))}${chanName(c.canal)}</div></div>
+          <div class="avatar ${c.canal}">${esc(c.ini)}</div>
+          <div style="flex:1"><div style="font-weight:650">${esc(c.nombre)}</div><div class="channel">${svg(chanIco(c.canal))}${chanName(c.canal)}</div></div>
           ${(()=>{const[sc,st]=statusChip(c.estado);return `<span class="chip ${sc}"><span class="d" style="background:currentColor"></span>${st}</span>`;})()}
           <button class="btn sm" id="pauseBtn">${c.estado==='pausado'?svg(I.play)+' Reactivar Redi':svg(I.pause)+' Pausar Redi'}</button>
           <button class="btn sm ${c.estado==='humano'?'primary':''}" id="takeBtn">${svg(I.hand)} Tomar</button>
         </div>
         <div class="th-body">
-          ${c.msgs.map(m=>`<div class="bub ${m.o}">${m.t}<span class="bt">${m.h}</span></div>`).join('')}
+          ${c.msgs.map(m=>`<div class="bub ${m.o==='out'?'out':'in'}">${esc(m.t)}<span class="bt">${esc(m.h)}</span></div>`).join('')}
         </div>
         <div class="th-foot">
           <input class="inp" id="replyInp" placeholder="${c.estado==='pausado'?'Escribí vos (Redi está en pausa)…':'Escribir un mensaje…'}"/>
@@ -524,9 +526,9 @@ VIEWS.crm = async ()=>{
       <thead><tr><th>Cliente</th><th>Qué quiere</th><th>Servicio</th><th>Presupuesto</th><th>Pago</th><th>Pagado</th><th>Saldo</th><th>Entrega</th><th>Estado</th></tr></thead>
       <tbody>${rows.map(r=>{const[pc,pt]=pagoChip(r.pago);const[ec,et]=estadoChip(r.estado);return `
         <tr>
-          <td><div class="who">${r.nombre}</div><div class="sm2 channel">${svg(chanIco(r.canal))}${r.contacto}</div></td>
-          <td class="sm2">${r.quiere}</td>
-          <td>${r.servicios}</td>
+          <td><div class="who">${esc(r.nombre)}</div><div class="sm2 channel">${svg(chanIco(r.canal))}${esc(r.contacto)}</div></td>
+          <td class="sm2">${esc(r.quiere)}</td>
+          <td>${esc(r.servicios)}</td>
           <td class="tnum">${r.total?money(r.total):'—'}</td>
           <td><span class="chip ${pc}">${pt}</span></td>
           <td class="tnum">${r.pagado?money(r.pagado):'—'}</td>
@@ -545,11 +547,11 @@ VIEWS.leads = async ()=>{
     <thead><tr><th>Fecha</th><th>Nombre</th><th>Contacto</th><th>Canal</th><th>Interés</th><th>Score</th><th>Prioridad</th></tr></thead>
     <tbody>${rows.map(r=>`
       <tr>
-        <td class="sm2">${r.fecha}</td>
-        <td class="who">${r.nombre}</td>
-        <td class="sm2">${r.contacto}</td>
+        <td class="sm2">${esc(r.fecha)}</td>
+        <td class="who">${esc(r.nombre)}</td>
+        <td class="sm2">${esc(r.contacto)}</td>
         <td><span class="channel">${svg(chanIco(r.canal))}${chanName(r.canal)}</span></td>
-        <td>${r.interes}</td>
+        <td>${esc(r.interes)}</td>
         <td class="tnum">${scoreBar(r.score)}</td>
         <td>${r.prioridad==='alta'?'<span class="chip crit">Alta</span>':'<span class="chip mute">Normal</span>'}</td>
       </tr>`).join('')}</tbody>
@@ -565,8 +567,8 @@ VIEWS.agenda = async ()=>{
     <div class="section-title">Próximas llamadas coordinadas por Redi</div>
     <div class="list">
       ${rows.map(a=>`<div class="it"><div class="mi-ico" style="width:40px;height:40px">${svg(I.phone)}</div>
-        <div class="meta"><div class="nm">${a.nombre}</div><div class="ms">${a.tema}</div></div>
-        <div style="text-align:right"><div style="font-weight:650">${a.dia}</div><div class="tm">${a.hora}</div></div></div>`).join('')}
+        <div class="meta"><div class="nm">${esc(a.nombre)}</div><div class="ms">${esc(a.tema)}</div></div>
+        <div style="text-align:right"><div style="font-weight:650">${esc(a.dia)}</div><div class="tm">${esc(a.hora)}</div></div></div>`).join('')}
     </div></div>`;
 };
 
@@ -584,14 +586,14 @@ VIEWS.reporte = async ()=>{
       <div class="card pad">
         <div class="section-title">Publicaciones que más trajeron</div>
         ${r.posts.map(p=>`<div style="margin:14px 0">
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${p.txt}</span><span class="tnum" style="color:var(--muted)">${p.inter} inter.</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>${esc(p.txt)}</span><span class="tnum" style="color:var(--muted)">${p.inter} inter.</span></div>
           <div style="height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.round(p.alcance/maxA*100)}%;background:linear-gradient(90deg,var(--accent),#8f1512)"></div></div>
           <div class="tm" style="margin-top:4px">${p.alcance.toLocaleString('es-AR')} de alcance</div>
         </div>`).join('')}
       </div>
       <div class="card pad">
         <div class="section-title">Consejos de Redi</div>
-        ${r.consejos.map(c=>`<div class="mini-it"><div class="mi-ico">${svg(I.bolt)}</div><div class="mt" style="font-weight:500;line-height:1.45">${c}</div></div>`).join('')}
+        ${r.consejos.map(c=>`<div class="mini-it"><div class="mi-ico">${svg(I.bolt)}</div><div class="mt" style="font-weight:500;line-height:1.45">${esc(c)}</div></div>`).join('')}
       </div>
     </div>`;
 };
@@ -603,8 +605,8 @@ VIEWS.chat = async ()=>{
     $view().innerHTML = `<div class="card redi-chat">
       <div class="rc-body" id="rcBody">
         ${rediHist.map(m=>m.o==='redi'
-          ? `<div class="redi-msg"><div class="ra">R</div><div class="rb">${m.t}</div></div>`
-          : `<div class="redi-msg me"><div class="rb">${m.t}</div></div>`).join('')}
+          ? `<div class="redi-msg"><div class="ra">R</div><div class="rb">${esc(m.t)}</div></div>`
+          : `<div class="redi-msg me"><div class="rb">${esc(m.t)}</div></div>`).join('')}
       </div>
       <div class="suggest">${suger.map(s=>`<span class="s">${s}</span>`).join('')}</div>
       <div class="rc-foot">
