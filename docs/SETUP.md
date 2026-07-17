@@ -18,6 +18,8 @@ en la **fila 1**:
 | `Leads` | `fecha`, `nombre`, `contacto`, `canal`, `interes`, `resumen`, `score`, `prioridad`, `estado`, `ultimo_seguimiento`, `variante` |
 | `Agenda` | `fecha_hora`, `nombre`, `contacto`, `tema`, `estado` |
 | `CRM Clientes` | `fecha_alta`, `nombre`, `contacto`, `canal`, `que_quiere`, `servicios`, `presupuesto_total`, `detalle_presupuesto`, `modelo`, `pago_estado`, `monto_pagado`, `fecha_pago`, `saldo_pendiente`, `fecha_entrega_estimada`, `estado_proyecto`, `notas`, `encuesta_mes` |
+| `Pausas` | `contacto`, `motivo` |
+| `Onboarding Clientes` | (la que ya tenés — Redi la usa para el checklist de material) |
 
 > **`CRM Clientes`** es tu base de datos de control total (lo que pediste). Redi la carga y la
 > actualiza sola: quién es, cómo contactarlo, qué quiere, el presupuesto pasado y qué incluye, si
@@ -88,6 +90,20 @@ En n8n → **Workflows → Import from File**, importá:
   manda el reporte por WhatsApp y email, incluyendo **qué publicación rindió más** (Meta).
   Para eso, en el nodo `Traer Insights (Meta)` reemplazá `PEGAR_INSTAGRAM_BUSINESS_ID` y
   `PEGAR_PAGE_ACCESS_TOKEN`. Si no lo configurás, el reporte igual sale (sin la parte de posts).
+
+### Extras nuevos (ya vienen configurados)
+- **Validez del presupuesto:** Redi aclara que el precio se mantiene 15 días (`config_operativa.presupuesto`).
+- **Onboarding:** apenas paga la seña, manda el checklist de material/accesos. El plazo de entrega
+  arranca cuando el cliente lo envía todo.
+- **Recordatorio del saldo:** el seguimiento avisa el 50% restante a los clientes con proyecto
+  entregado y saldo pendiente.
+- **Horario de atención:** Redi responde 24/7 pero maneja expectativas sobre cuándo lo atiende
+  Luca en persona (`config_operativa.horario_atencion`).
+- **Modo pausa:** si querés atender un chat vos, agregá el `contacto` en la hoja **`Pausas`** y
+  Redi deja de responder ese chat. Para reactivarlo, borrás la fila. (En la Etapa 2 será un botón
+  en el panel.)
+- **Un cliente = una persona:** si el mismo contacto escribe por IG y WhatsApp, Redi lo reconoce
+  por el CRM y no lo duplica.
 
 ### Memoria y buffer (ya vienen en el Cerebro)
 - **Memoria persistente:** Redi recuerda conversaciones anteriores por contacto. Si un cliente

@@ -132,6 +132,31 @@
     },
     {
       "parameters": {
+        "operation": "getAll",
+        "sheetName": { "__rl": true, "mode": "list", "value": "Pausas" },
+        "documentId": { "__rl": true, "mode": "list", "value": "PEGAR_ID_DEL_SHEET" },
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "read-pausas",
+      "name": "Leer Pausas",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1160, 120],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Modo pausa: si el contacto está en la hoja 'Pausas', Redi NO responde\n// (lo atiende Luca). Si no está, sigue normal.\nconst pausas = $input.all().map(i => (i.json.contacto || '').toString().trim()).filter(Boolean);\nconst msg = $('¿Último mensaje?').first().json;\nconst from = (msg.from || '').toString().trim();\nconst pausado = pausas.some(p => p === from || (from && from.includes(p)) || (p && p.includes(from)));\nif (pausado) { return []; }\nreturn [{ json: msg }];"
+      },
+      "id": "filtrar-pausa",
+      "name": "Filtrar Pausados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1280, 120]
+    },
+    {
+      "parameters": {
         "promptType": "define",
         "text": "={{ $json.text }}",
         "options": {
@@ -143,7 +168,7 @@
       "name": "Redi (AI Agent)",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.9,
-      "position": [1280, 120]
+      "position": [1460, 120]
     },
     {
       "parameters": {
@@ -437,7 +462,9 @@
     "Unificar entrada": { "main": [ [ { "node": "Bufferizar", "type": "main", "index": 0 } ] ] },
     "Bufferizar": { "main": [ [ { "node": "Esperar 8s", "type": "main", "index": 0 } ] ] },
     "Esperar 8s": { "main": [ [ { "node": "¿Último mensaje?", "type": "main", "index": 0 } ] ] },
-    "¿Último mensaje?": { "main": [ [ { "node": "Redi (AI Agent)", "type": "main", "index": 0 } ] ] },
+    "¿Último mensaje?": { "main": [ [ { "node": "Leer Pausas", "type": "main", "index": 0 } ] ] },
+    "Leer Pausas": { "main": [ [ { "node": "Filtrar Pausados", "type": "main", "index": 0 } ] ] },
+    "Filtrar Pausados": { "main": [ [ { "node": "Redi (AI Agent)", "type": "main", "index": 0 } ] ] },
     "GPT-4o (temp 0.3, 550 tok)": { "ai_languageModel": [ [ { "node": "Redi (AI Agent)", "type": "ai_languageModel", "index": 0 } ] ] },
     "Memoria persistente (Postgres)": { "ai_memory": [ [ { "node": "Redi (AI Agent)", "type": "ai_memory", "index": 0 } ] ] },
     "Consultar_Catalogo": { "ai_tool": [ [ { "node": "Redi (AI Agent)", "type": "ai_tool", "index": 0 } ] ] },

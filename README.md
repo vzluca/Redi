@@ -29,6 +29,11 @@
 | **Memoria persistente** (recuerda y saluda "hola de nuevo") | ✅ | `Memoria persistente (Postgres)` |
 | **Buffer de mensajes** (junta los cortos seguidos) | ✅ | nodos `Bufferizar` + `Esperar 8s` |
 | **CRM completo** (qué quiere, presupuesto, pagos, saldo, entrega) | ✅ | tools `Cargar_CRM` + `Actualizar_Pago` |
+| **Validez del presupuesto** (precio se mantiene 15 días) | ✅ | `config_operativa.presupuesto` |
+| **Checklist de onboarding** tras la seña (arranca el reloj) | ✅ | `brain/redi-system-prompt.md` |
+| **Recordatorio del saldo** (50% restante al entregar) | ✅ | `n8n/redi-seguimiento.json` |
+| **Horario de atención** (maneja expectativas fuera de hora) | ✅ | `config_operativa.horario_atencion` |
+| **Modo pausa** (silenciar Redi en un chat para atenderlo vos) | ✅ | hoja `Pausas` + nodo `Filtrar Pausados` |
 | Responder FAQ desde **Base de Conocimiento** en el Sheet | ✅ | tool `Consultar_BaseConocimiento` |
 | Captar y guardar leads | ✅ | tool `Guardar_Lead` |
 | Agendar llamadas con Luca (Google Calendar) | ✅ | tool `Agendar_Llamada` |

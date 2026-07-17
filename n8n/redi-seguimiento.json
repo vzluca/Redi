@@ -73,7 +73,17 @@
       "position": [40, 160]
     },
     {
-      "parameters": { "mode": "combine", "combineBy": "combineAll", "options": {} },
+      "parameters": {
+        "jsCode": "// Clientes con proyecto ENTREGADO y saldo pendiente > 0 → recordar el 50% restante\nreturn items.filter(i => {\n  const j = i.json;\n  return (j.estado_proyecto || '') === 'Entregado' && Number(j.saldo_pendiente) > 0;\n}).map(i => ({ json: {\n  to: i.json.contacto,\n  nombre: i.json.nombre || '',\n  saldo: i.json.saldo_pendiente,\n  tipo: 'saldo'\n}}));"
+      },
+      "id": "filter-saldos",
+      "name": "Saldos por cobrar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [40, 320]
+    },
+    {
+      "parameters": { "mode": "combine", "combineBy": "combineAll", "numberInputs": 3, "options": {} },
       "id": "merge",
       "name": "Unir destinatarios",
       "type": "n8n-nodes-base.merge",
@@ -82,7 +92,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Arma el mensaje según el tipo. Para reactivación hace A/B testing:\n// alterna entre 2 versiones y registra cuál se mandó (variante A/B) para medir cuál convierte más.\nreturn items.map((i, idx) => {\n  const j = i.json;\n  let body; let variante = '';\n  if (j.tipo === 'satisfaccion') {\n    body = `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. ¿Cómo venís con la automatización? Del 1 al 10, ¿qué nota nos pondrías? Si hay algo para mejorar, contame y lo resolvemos.`;\n  } else {\n    // A/B: variante según índice (par = A, impar = B). Simple y balanceado.\n    const esA = idx % 2 === 0;\n    variante = esA ? 'A' : 'B';\n    body = esA\n      ? `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. Quería saber si seguís interesado en ${j.interes}. Si querés, te muestro opciones o coordinamos una llamada corta con Luca. ¿Te sirve?`\n      : `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. Te dejé pensando con ${j.interes}, ¿no? 😄 Si querés lo vemos juntos en 2 minutos y te paso un precio a tu medida. ¿Lo charlamos?`;\n  }\n  return { json: { to: j.to, body, tipo: j.tipo, variante } };\n});"
+        "jsCode": "// Arma el mensaje según el tipo. Para reactivación hace A/B testing:\n// alterna entre 2 versiones y registra cuál se mandó (variante A/B) para medir cuál convierte más.\nreturn items.map((i, idx) => {\n  const j = i.json;\n  let body; let variante = '';\n  if (j.tipo === 'satisfaccion') {\n    body = `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. ¿Cómo venís con la automatización? Del 1 al 10, ¿qué nota nos pondrías? Si hay algo para mejorar, contame y lo resolvemos.`;\n  } else if (j.tipo === 'saldo') {\n    body = `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. Te recuerdo que quedó pendiente el 50% restante (u$s ${j.saldo}) de tu proyecto ya entregado. Cuando quieras te paso los datos para la transferencia. ¡Gracias!`;\n  } else {\n    // A/B: variante según índice (par = A, impar = B). Simple y balanceado.\n    const esA = idx % 2 === 0;\n    variante = esA ? 'A' : 'B';\n    body = esA\n      ? `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. Quería saber si seguís interesado en ${j.interes}. Si querés, te muestro opciones o coordinamos una llamada corta con Luca. ¿Te sirve?`\n      : `¡Hola ${j.nombre}! 👋 Soy Redi, de RedLabs. Te dejé pensando con ${j.interes}, ¿no? 😄 Si querés lo vemos juntos en 2 minutos y te paso un precio a tu medida. ¿Lo charlamos?`;\n  }\n  return { json: { to: j.to, body, tipo: j.tipo, variante } };\n});"
       },
       "id": "build-msg",
       "name": "Armar mensaje",
@@ -112,8 +122,9 @@
     "Cada día 10:00": { "main": [ [ { "node": "Leer Leads", "type": "main", "index": 0 }, { "node": "Leer Clientes", "type": "main", "index": 0 } ] ] },
     "Leer Leads": { "main": [ [ { "node": "Leads fríos (2+ días)", "type": "main", "index": 0 } ] ] },
     "Leads fríos (2+ días)": { "main": [ [ { "node": "Unir destinatarios", "type": "main", "index": 0 } ] ] },
-    "Leer Clientes": { "main": [ [ { "node": "Clientes para encuestar", "type": "main", "index": 0 } ] ] },
+    "Leer Clientes": { "main": [ [ { "node": "Clientes para encuestar", "type": "main", "index": 0 }, { "node": "Saldos por cobrar", "type": "main", "index": 0 } ] ] },
     "Clientes para encuestar": { "main": [ [ { "node": "Unir destinatarios", "type": "main", "index": 1 } ] ] },
+    "Saldos por cobrar": { "main": [ [ { "node": "Unir destinatarios", "type": "main", "index": 2 } ] ] },
     "Unir destinatarios": { "main": [ [ { "node": "Armar mensaje", "type": "main", "index": 0 } ] ] },
     "Armar mensaje": { "main": [ [ { "node": "Enviar por WhatsApp", "type": "main", "index": 0 } ] ] }
   },

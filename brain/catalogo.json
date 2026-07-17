@@ -323,6 +323,27 @@
       "columnas": ["pregunta", "respuesta", "categoria"],
       "nota": "Redi responde FAQ leyendo esta hoja del mismo Sheet. Cargá acá las preguntas típicas."
     },
+    "presupuesto": {
+      "validez_dias": 15,
+      "instruccion": "Al pasar un presupuesto, aclarar que el precio se mantiene por 'validez_dias' días. Genera urgencia sana y evita que se peleen precios viejos."
+    },
+    "horario_atencion": {
+      "activo": true,
+      "dias": "lun a vie",
+      "desde": "09:00",
+      "hasta": "19:00",
+      "zona": "America/Argentina/Cordoba",
+      "instruccion": "Redi responde 24/7, pero si un cliente pide hablar con Luca fuera de horario, aclarar que Luca se contacta dentro del horario de atención. Nunca prometer respuesta humana inmediata fuera de hora."
+    },
+    "onboarding": {
+      "instruccion": "Apenas el cliente paga la seña, Redi le manda el checklist de material/accesos que hay que enviar para arrancar. El reloj de entrega arranca cuando el cliente manda TODO. Los accesos puntuales por servicio están en la hoja 'Onboarding Clientes' del Sheet.",
+      "recordar": "Nunca pedir contraseñas: solo las keys/accesos puntuales de cada herramienta."
+    },
+    "pausa": {
+      "hoja": "Pausas",
+      "columnas": ["contacto", "motivo"],
+      "instruccion": "Si el 'contacto' está en la hoja 'Pausas', Redi NO responde ese chat (lo atiende Luca en persona). Para reactivar, se borra la fila. En la Etapa 2 esto es un botón en el panel."
+    },
     "ia": {
       "modelo_conversacion": "gpt-4o",
       "modelo_tareas_internas": "gpt-4o-mini",
