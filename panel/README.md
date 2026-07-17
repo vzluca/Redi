@@ -4,8 +4,19 @@ El panel de control de RedLabs: desde acá Luca ve y maneja todo lo que hace Red
 resumen del negocio, bandeja unificada (WhatsApp/Instagram/Email), CRM con pagos,
 leads, agenda, reporte semanal y un **chat directo con Redi**.
 
-Estética alineada a redlabs.digital: fondo oscuro, acento rojo, tipografía sans limpia,
-sin adornos. Tiene modo claro/oscuro (botón arriba a la derecha).
+Estética alineada al sistema de marca de RedLabs. Tiene modo claro/oscuro (botón arriba a la derecha).
+
+## Marca (tokens)
+- **Colores:** Primary Red `#EE2B24` (acento, con moderación), Primary Black `#050403`
+  (ink/fondo), Warm White `#F7F5F2` (superficie). Definidos como variables CSS en `:root`.
+- **Tipografías:** Instrument Sans (títulos + texto), Tomorrow (solo números/estadísticas),
+  monoespaciada del sistema (labels, navegación, botones, metadata). Instrument Sans y Tomorrow
+  se cargan de Google Fonts en producción; en el preview aislado caen a la fuente del sistema.
+- **Estilo:** todo plano (sin degradados), sin bordes innecesarios (se separa por superficie y
+  sombra), esquinas angulares y botones con la esquina cortada de la marca.
+- **Logo:** está recreado en SVG (rojo) en el sidebar y en el avatar de Redi. Para usar el
+  **archivo oficial**, poné tu `logo.svg` en `panel/` y reemplazá el `<svg>` del bloque
+  `.brand .mark` por `<img src="logo.svg" alt="RedLabs">` (funciona en warm white o black según el fondo).
 
 ## Es un solo archivo
 
